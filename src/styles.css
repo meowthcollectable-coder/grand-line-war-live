@@ -132,7 +132,7 @@ html, body, #root {
   position: absolute;
   left: 0;
   top: 50%;
-  width: 100%;
+  width: 80%;
   height: 3px;
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-50%);
