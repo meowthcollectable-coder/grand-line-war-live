@@ -3,24 +3,25 @@ html, body, #root {
   padding: 0;
   height: 100%;
   width: 100%;
-  font-family: Arial, sans-serif;
   background-color: #001a33;
-  color: #fff;
+  color: white;
+  font-family: Arial, sans-serif;
   overflow: hidden;
 }
 
 .app {
   display: flex;
+  flex-direction: row;
   height: 100vh;
   width: 100%;
 }
 
 /* Pannello sinistro */
 .left-panel {
-  width: 28%;
+  width: 25%;
   background-color: rgba(0,0,0,0.6);
   border-right: 2px solid #ffd700;
-  padding: 10px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -30,8 +31,9 @@ html, body, #root {
 .left-panel h1 {
   text-align: center;
   color: #ffd700;
-  margin-bottom: 10px;
-  text-shadow: 2px 2px 6px black;
+  margin: 4px 0;
+  font-size: 18px;
+  text-shadow: 1px 1px 3px black;
 }
 
 .leaderboard {
@@ -43,8 +45,8 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
-  padding: 3px 0;
+  font-size: 11px;
+  padding: 1px 0;
   border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
@@ -60,45 +62,45 @@ html, body, #root {
 
 .leader-bar {
   width: 25%;
-  height: 6px;
+  height: 4px;
   background: rgba(255,255,255,0.2);
-  border-radius: 4px;
+  border-radius: 2px;
   overflow: hidden;
 }
+
 .leader-bar div {
   height: 100%;
   background: linear-gradient(90deg, #00bfff, #00ffcc);
 }
 
-/* Bottone fine gara */
+/* Pulsante fine gara */
 .controls-bottom {
   text-align: center;
-  padding: 10px 0;
+  padding: 6px 0;
 }
+
 .finish-btn {
   background-color: #ffd700;
   color: #000;
   font-weight: bold;
   border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 16px;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
   cursor: pointer;
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
-  transition: transform 0.2s ease;
-}
-.finish-btn:hover {
-  transform: scale(1.05);
+  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+  transition: transform 0.1s ease;
 }
 
-/* Area mare */
+.finish-btn:hover {
+  transform: scale(1.03);
+}
+
+/* Area corsa */
 .race-area {
   position: relative;
   flex: 1;
   background: linear-gradient(180deg, #004466, #001a33);
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .sea-bg {
@@ -111,11 +113,11 @@ html, body, #root {
 
 .island-img {
   position: absolute;
-  top: 10%;
-  right: 3%;
-  width: 120px;
+  top: 12%;
+  right: 2%;
+  width: 100px;
   height: auto;
-  z-index: 5;
+  z-index: 2;
 }
 
 /* Navi */
@@ -127,40 +129,29 @@ html, body, #root {
 
 .ship-row {
   position: relative;
-  height: 70px;
+  height: 45px; /* corsie più compatte */
 }
 
 .ship {
   position: absolute;
   display: flex;
   align-items: center;
-  gap: 10px;
-  transition: transform 1s ease-out;
+  transition: transform 0.8s ease-out;
+  gap: 4px;
 }
 
 .ship-img {
-  width: 80px;
+  width: 55px;
   height: auto;
 }
 
 .ship-name {
-  font-size: 14px;
+  font-size: 11px;
   text-transform: capitalize;
-  text-shadow: 1px 1px 3px black;
+  text-shadow: 1px 1px 2px black;
 }
 
-/* Scrollbar invisibile */
+/* Nascondi scrollbar estetiche */
 ::-webkit-scrollbar {
   display: none;
-}
-/* Fumo */
-@keyframes smokeFade {
-  0% { transform: translateY(0) scale(1); opacity: 0.9; }
-  100% { transform: translateY(-20px) scale(1.3); opacity: 0; }
-}
-
-.smoke {
-  pointer-events: none;
-  z-index: 9999;
-  animation: smokeFade 1.5s ease-in-out;
 }
