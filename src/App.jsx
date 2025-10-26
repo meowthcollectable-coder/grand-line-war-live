@@ -6,7 +6,7 @@ import { SOUND_URLS } from "./sounds";
 import { ASSETS } from "./assets";
 import "./styles.css";
 
-const SHEET_ID = "1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo"; // Google Sheet
+const SHEET_ID = "1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo";
 
 const DEFAULT_PLAYERS = [
   "carlo","riccardo","daniele","domenico","nicholas","mattia z.","mattia a.","francesca",
@@ -37,7 +37,6 @@ export default function App() {
     boomRef.current = new Howl({ src: [SOUND_URLS.boom], volume: 1, html5: true });
     finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
 
-    // Sblocco audio per iOS
     const unlockAudio = () => {
       [dingRef, boomRef, finishRef].forEach(ref => {
         if (ref.current) ref.current.play();
