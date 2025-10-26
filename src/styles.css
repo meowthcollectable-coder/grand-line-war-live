@@ -3,7 +3,7 @@ html, body, #root {
   padding: 0;
   height: 100%;
   width: 100%;
-  font-family: Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   background-color: #001a33;
   color: white;
   overflow: hidden;
@@ -11,33 +11,31 @@ html, body, #root {
 
 .app {
   display: flex;
-  flex-direction: row;
   height: 100vh;
   width: 100%;
 }
 
-/* Pannello sinistro */
+/* ====== PANNELLO SINISTRO ====== */
 .left-panel {
   width: 25%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background: rgba(0,0,0,0.55);
   border-right: 2px solid #ffd700;
-  padding: 8px;
+  padding: 10px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  overflow: hidden;
 }
 
 .left-panel h1 {
   text-align: center;
   color: #ffd700;
-  margin: 4px 0;
-  font-size: 18px;
+  margin: 0 0 8px 0;
   text-shadow: 1px 1px 3px black;
 }
 
 .leaderboard {
-  flex-grow: 1;
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -45,14 +43,17 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 12px;
   padding: 2px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .leader-name {
-  width: 60%;
+  width: 55%;
   text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .leader-points {
@@ -63,44 +64,39 @@ html, body, #root {
 .leader-bar {
   width: 25%;
   height: 5px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.2);
   border-radius: 3px;
   overflow: hidden;
 }
-
 .leader-bar div {
   height: 100%;
   background: linear-gradient(90deg, #00bfff, #00ffcc);
 }
 
-/* Bottone fine gara */
+/* ====== PULSANTE ====== */
 .controls-bottom {
   text-align: center;
-  padding: 6px 0;
+  padding: 10px 0;
 }
-
 .finish-btn {
-  background-color: #ffd700;
+  background: #ffd700;
   color: #000;
-  font-weight: bold;
+  font-weight: 700;
   border: none;
   border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 8px 14px;
+  font-size: 13px;
   cursor: pointer;
-  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
-  transition: transform 0.1s ease;
+  transition: transform 0.2s ease;
 }
+.finish-btn:hover { transform: scale(1.05); }
 
-.finish-btn:hover {
-  transform: scale(1.03);
-}
-
-/* Area corsa */
+/* ====== AREA CORSA ====== */
 .race-area {
   position: relative;
   flex: 1;
   background: linear-gradient(180deg, #004466, #001a33);
+  overflow: hidden;
 }
 
 .sea-bg {
@@ -113,14 +109,14 @@ html, body, #root {
 
 .island-img {
   position: absolute;
-  top: 12%;
-  right: 2%;
-  width: 100px;
+  top: 10%;
+  right: 3%;
+  width: 110px;
   height: auto;
-  z-index: 2;
+  z-index: 5;
 }
 
-/* Navi */
+/* ====== NAVI ====== */
 .ships {
   position: relative;
   width: 100%;
@@ -129,7 +125,7 @@ html, body, #root {
 
 .ship-row {
   position: relative;
-  height: 45px;
+  height: 48px;
 }
 
 .ship {
@@ -141,17 +137,15 @@ html, body, #root {
 }
 
 .ship-img {
-  width: 55px;
+  width: 60px;
   height: auto;
 }
 
 .ship-name {
-  font-size: 11px;
+  font-size: 12px;
   text-transform: capitalize;
   text-shadow: 1px 1px 2px black;
 }
 
-/* Scrollbar invisibile */
-::-webkit-scrollbar {
-  display: none;
-}
+/* ====== SCROLL ====== */
+::-webkit-scrollbar { display: none; }
