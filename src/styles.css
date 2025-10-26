@@ -103,3 +103,29 @@ body{margin:0;font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;background:
   z-index: 5;          /* sopra le navi */
   pointer-events: none; /* evita click */
 }
+
+@keyframes smokeFade {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-20px) scale(1.3);
+    opacity: 0.2;
+  }
+}
+.ships {
+  position: relative;
+  overflow: visible !important; /* ✅ fondamentale */
+  z-index: 5;
+}
+.ship-row {
+  position: relative;
+  overflow: visible !important;
+}
+
+.ship {
+  position: absolute;
+  overflow: visible !important;
+  z-index: 10;
+}
