@@ -141,7 +141,7 @@ export default function App() {
     <div className="app">
       {/* PANNELLO SINISTRO */}
       <div className="left-panel">
-        <h1>Grand Line War</h1>
+<h1 className="leaderboard-title">LEADERBOARD</h1>
 
         <div className="leaderboard">
           {players.map(p => (
@@ -168,7 +168,6 @@ export default function App() {
             backgroundImage: ASSETS.MAP ? `url(${ASSETS.MAP})` : "none",
           }}
         >
-          {ASSETS.ISLAND && <img src={ASSETS.ISLAND} className="island-img" alt="island" />}
 
           <div className="ships">
             {players.map(p => {

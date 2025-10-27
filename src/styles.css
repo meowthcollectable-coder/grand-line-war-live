@@ -40,18 +40,32 @@ html, body, #root {
   overflow-y: auto;
 }
 
+.leaderboard-title {
+  font-family: "Syne Mono", monospace;  /* ✅ nuovo font */
+  color: #ffd700;
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 2px;
+  text-shadow: 1px 1px 3px black;
+  margin: 0 0 10px 0;
+}
+
+
 .leader-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-size: 16px;
-  padding: 5px 0;
+  padding: 6px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .leader-name {
   width: 60%;
   text-transform: capitalize;
+  font-family: "Major Mono Display", monospace; /* ✅ nuovo font */
+  font-size: 13px;
+  letter-spacing: 1px;
 }
 
 .leader-points {
@@ -121,7 +135,7 @@ html, body, #root {
   position: relative;
   width: 100%;
   height: 100%;
-  transform: translatey(5%); /* ✅ sposta in basso tutto il gruppo navi+tracciati */
+  transform: translatey(14%); /* ✅ sposta in basso tutto il gruppo navi+tracciati */
 }
 
 .ship-row {

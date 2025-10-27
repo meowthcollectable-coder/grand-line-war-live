@@ -26,10 +26,10 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
       className="ship-row"
       style={{
         position: "relative",
-        height: "34px", // compromesso estetico
+        height: "32px", // via di mezzo
         overflow: "visible",
         display: "flex",
-        alignItems: "center", // ✅ centra verticalmente navi e tracce
+        alignItems: "center",
         justifyContent: "flex-start",
       }}
     >
@@ -42,7 +42,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
           left: 0,
           top: "50%",
           width: "80%",
-          height: "24px",
+          height: "22px", // via di mezzo
           background: "rgba(255,255,255,0.15)",
           borderRadius: "4px",
           transform: "translateY(-50%)",
@@ -69,7 +69,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
           alt="ship"
           className="ship-img"
           style={{
-            width: "48px",
+            width: "44px", // via di mezzo tra 48 e 38
             height: "auto",
             transition: "filter 0.3s",
           }}
@@ -81,7 +81,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
             color: isWinner ? "gold" : "white",
             textShadow: "1px 1px 3px rgba(0,0,0,0.6)",
             marginLeft: "8px",
-            fontSize: "12px",
+            fontSize: "11px", // via di mezzo
           }}
         >
           {name}
