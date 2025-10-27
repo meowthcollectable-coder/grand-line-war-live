@@ -196,23 +196,24 @@ export default function App() {
 
       {/* 📊 Barra di progresso */}
       <div
-        className="leader-bar"
-        style={{
-          gridColumn: "1 / span 3",
-          height: "5px",
-          background: "rgba(255,255,255,0.15)",
-          borderRadius: "3px",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            width: `${(p.points / MAX_POINTS) * 100}%`,
-            height: "100%",
-            background: "linear-gradient(90deg, #00bfff, #00ffcc)",
-          }}
-        />
-      </div>
+  className="leader-bar"
+  style={{
+    gridColumn: "1 / span 3",
+    height: "6px",
+    background: "rgba(255,255,255,0.15)",
+    borderRadius: "3px",
+    overflow: "hidden",
+  }}
+>
+  <div
+    style={{
+      width: `${(p.points / MAX_POINTS) * 100}%`,
+      height: "100%",
+      background: "linear-gradient(90deg, #4d3a39, #3b2a29)",
+    }}
+  />
+</div>
+
     </div>
   ))}
 </div>
