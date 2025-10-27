@@ -307,58 +307,69 @@ html, body, #root {
     transform: translateY(-50%) scaleX(2);
   }
 }
-/* === 📱 Adattamento tablet e schermi medi === */
-@media (max-width: 1024px) {
-  .left-panel {
-    width: 220px;
-    background-size: contain;
-  }
-
-  .leaderboard {
-    font-size: 12px;
-  }
-
-  .leader-row {
-    margin-bottom: 3px;
-  }
-
-  .ship-row {
-    height: 24px !important;
-  }
-
-  .ship-img {
-    width: 36px !important;
-  }
+/* 🌊 Layout fluido: si adatta perfettamente a PC e tablet */
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  transform-origin: top left;
 }
 
-/* === 📱 Adattamento tablet piccoli / orizzontale === */
-@media (max-width: 850px) {
-  .app {
-    flex-direction: column;
-  }
+/* 📜 Pannello sinistro (leaderboard) */
+.left-panel {
+  width: clamp(260px, 22vw, 340px); /* dinamico ma con limiti */
+  background: url("./assets/leaderboard.png") center/cover no-repeat;
+  background-size: 100% 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  box-sizing: border-box;
+}
 
-  .left-panel {
-    width: 100%;
-    height: 180px;
-    background-position: top;
-  }
+/* 🌊 Area mare */
+.race-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
 
-  .leaderboard {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    font-size: 11px;
-  }
+/* Le navi si scalano proporzionalmente alla viewport */
+.ships {
+  position: absolute;
+  top: 8vh; /* distanza dall’alto, proporzionale all’altezza */
+  left: 5vw; /* piccolo margine a destra */
+  width: 90%;
+  height: 80%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transform: scale(clamp(0.85, calc(100vh / 1080), 1));
+  transform-origin: top center;
+}
 
-  .race-area {
-    height: calc(100vh - 180px);
-  }
+/* 🌟 Titolo adattivo */
+.left-panel h1 {
+  font-size: clamp(18px, 2vw, 28px);
+  text-align: center;
+  margin-bottom: 10px;
+}
 
-  .ship-row {
-    height: 22px !important;
-  }
+/* Tabelle responsive */
+.leader-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.6fr;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(11px, 1vw, 14px);
+}
 
-  .ship-img {
-    width: 30px !important;
-  }
+/* Navi e tracciati rimangono perfettamente proporzionati */
+.ship-row {
+  height: clamp(22px, 3vh, 34px);
+}
+
+.ship-img {
+  width: clamp(30px, 4vw, 48px);
 }
