@@ -12,6 +12,7 @@ import tradimentoAudio from "./assets/events/tradimento.mp3";
 import attaccoAudio from "./assets/events/attacco.mp3";
 import pioggiaAudio from "./assets/events/pioggia.mp3";
 import tesoroAudio from "./assets/events/tesoro.mp3";
+import leaderboardBg from "./assets/ui/leaderboard.png"; // 🧭 nuova immagine sfondo
 import "./styles.css";
 
 const MAX_POINTS = 60;
@@ -99,11 +100,8 @@ export default function App() {
   const normalize = (points) => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
 
-  // 🎬 Gestione eventi speciali
   const toggleEvent = (eventKey) => {
     const current = eventSounds.current[eventKey];
-
-    // se è già attivo → stoppa
     if (activeEvent === eventKey) {
       current.fade(1, 0, 1500);
       setTimeout(() => current.stop(), 1500);
@@ -111,14 +109,12 @@ export default function App() {
       return;
     }
 
-    // ferma eventuale evento precedente
     if (activeEvent) {
       const prev = eventSounds.current[activeEvent];
       prev.fade(1, 0, 1500);
       setTimeout(() => prev.stop(), 1500);
     }
 
-    // avvia nuovo evento
     setActiveEvent(eventKey);
     current.volume(0);
     current.play();
@@ -127,38 +123,104 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="left-panel">
-        <h1>LEADERBOARD</h1>
+      {/* 🏴‍☠️ Leaderboard con pergamena */}
+      <div
+        className="left-panel"
+        style={{
+          backgroundImage: `url(${leaderboardBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          boxShadow: "inset 0 0 80px rgba(0,0,0,0.8)", // effetto bruciatura
+          position: "relative",
+          color: "#fff",
+          fontFamily: "'Syne Mono', monospace",
+          textShadow: "2px 2px 5px rgba(0,0,0,0.8)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          padding: "25px 10px",
+        }}
+      >
+        {/* Overlay per migliorare contrasto */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(0,0,0,0.25)",
+            borderRadius: "8px",
+            pointerEvents: "none",
+          }}
+        />
 
-        <div className="leaderboard">
-          {players.map(p => (
-            <div
-              key={p.name}
-              className="leader-row"
-              style={{
-                color: p.name === leader ? "#FFD700" : "white",
-                fontWeight: p.name === leader ? "bold" : "normal",
-              }}
-            >
-              <div className="leader-name">{p.name}</div>
-              <div className="leader-points">{p.points}</div>
-              <div className="leader-bar">
-                <div
-                  style={{
-                    width: `${(p.points / MAX_POINTS) * 100}%`,
-                    background: p.name === leader
-                      ? "linear-gradient(90deg, #FFD700, #FFF5B0)"
-                      : "linear-gradient(90deg, #00bfff, #00ffcc)",
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+        <h1 style={{ fontSize: "26px", marginBottom: "20px", zIndex: 2 }}>LEADERBOARD</h1>
 
-        {/* 🎛️ Pannello Eventi (solo locale) */}
+<div className="leaderboard" style={{ width: "102%", zIndex: 2 }}>
+  {players.map((p) => (
+    <div
+      key={p.name}
+      className="leader-row"
+      style={{
+        color: "white",
+        fontWeight: "normal",
+        display: "grid",
+        gridTemplateColumns: "1.2fr 1fr 0.6fr", // nome | pirata | punti
+        alignItems: "center",
+        gap: "8px",
+        marginBottom: "4px",
+      }}
+    >
+      <div className="leader-name" style={{ textAlign: "left" }}>
+        {p.name}
+      </div>
+
+      {/* 💀 Pirata */}
+      <div
+        className="leader-pirate"
+        style={{
+          fontStyle: "italic",
+          color: "#ffffff",
+          opacity: 0.9,
+          fontSize: "13px",
+          textAlign: "center",
+        }}
+      >
+        {p.pirate || "-"}
+      </div>
+
+      {/* 🏴‍☠️ Punti */}
+      <div className="leader-points" style={{ textAlign: "right" }}>
+        {p.points}
+      </div>
+
+      {/* 📊 Barra di progresso */}
+      <div
+        className="leader-bar"
+        style={{
+          gridColumn: "1 / span 3",
+          height: "5px",
+          background: "rgba(255,255,255,0.15)",
+          borderRadius: "3px",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            width: `${(p.points / MAX_POINTS) * 100}%`,
+            height: "100%",
+            background: "linear-gradient(90deg, #00bfff, #00ffcc)",
+          }}
+        />
+      </div>
+    </div>
+  ))}
+</div>
+
+
+        {/* 🎛️ Pannello Eventi (solo su localhost) */}
         {window.location.hostname === "localhost" && (
-          <div className="event-controls">
+          <div className="event-controls" style={{ marginTop: "auto", zIndex: 2 }}>
             <h2>⚡ Eventi Speciali</h2>
             <button onClick={() => toggleEvent("duello")}>Duello sul Ponte</button>
             <button onClick={() => toggleEvent("tradimento")}>Tradimento della Ciurma</button>
@@ -168,10 +230,11 @@ export default function App() {
         )}
       </div>
 
+      {/* 🌊 Area gara */}
       <div className="race-area">
         <div className="sea-bg" style={{ backgroundImage: ASSETS.MAP ? `url(${ASSETS.MAP})` : "none" }}>
           <div className="ships">
-            {players.map(p => {
+            {players.map((p) => {
               const progress = normalize(p.points);
               return (
                 <Ship
@@ -187,7 +250,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* 🌊 Overlay evento attivo */}
+        {/* 🌅 Overlay evento */}
         {activeEvent && (
           <div className="event-overlay fade-in">
             <img src={eventImages[activeEvent]} alt={activeEvent} />
@@ -197,3 +260,4 @@ export default function App() {
     </div>
   );
 }
+

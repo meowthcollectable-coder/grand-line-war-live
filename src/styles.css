@@ -17,9 +17,9 @@ html, body, #root {
 }
 
 .left-panel {
-  width: 16%;
+  width: 18%;
   background-color: #6b4a29;
-  border-right: 3px solid #ffd700;
+  border-right: 2px solid #000;
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -42,7 +42,7 @@ html, body, #root {
 
 .leaderboard-title {
   font-family: "Syne Mono", monospace;  /* ✅ nuovo font */
-  color: #ffd700;
+  color: #453736;
   text-align: center;
   font-size: 24px;
   letter-spacing: 2px;
@@ -58,15 +58,15 @@ html, body, #root {
   justify-content: space-between;
   font-size: 16px;
   padding: 5px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 4px solid rgba(255, 255, 255, 0.1);
 }
 
 .leader-name {
-  width: 60%;
+  width: 100%;
   text-transform: capitalize;
   font-family: "Major Mono Display", monospace; /* ✅ nuovo font */
-  font-size: 13px;
-  letter-spacing: 1px;
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
 }
 
 .leader-points {
@@ -84,7 +84,8 @@ html, body, #root {
 
 .leader-bar div {
   height: 100%;
-  background: linear-gradient(90deg, #00bfff, #00ffcc);
+  background: linear-gradient(90deg, #00bfff, #00ffff);
+  
 }
 
 .controls-bottom {
