@@ -1,21 +1,87 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { ASSETS } from "../assets";
 
-export default function Ship({ name, pirate, progress, isWinner }) {
-  const translateX = `${progress * 100}%`;
+export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
+  const trackRef = useRef(null);
+  const shipRef = useRef(null);
+
+  useEffect(() => {
+    if (trackRef.current && shipRef.current) {
+      const trackWidth = trackRef.current.offsetWidth;
+      const shipWidth = shipRef.current.offsetWidth;
+
+      // distanza percorribile reale in pixel
+      const maxTravel = trackWidth - shipWidth;
+
+      // movimento effettivo in pixel
+      const move = Math.min(progress, 1) * maxTravel;
+
+      // applica spostamento
+      shipRef.current.style.transform = `translate(${move}px, -50%)`;
+    }
+  }, [progress]);
 
   return (
-    <div className="ship-row">
-      <div className="ship-track" />
+    <div
+      className="ship-row"
+      style={{
+        position: "relative",
+        height: "55px",
+        overflow: "visible",
+      }}
+    >
+      {/* === TRACCIATO === */}
       <div
-        className="ship"
+        ref={trackRef}
+        className="ship-track"
         style={{
-          transform: `translateX(${translateX})`,
+          position: "absolute",
+          left: 0,
+          top: "50%",
+          width: "80%", // termina all'80% del contenitore
+          height: "40px",
+          background: "rgba(255,255,255,0.2)",
+          borderRadius: "6px",
+          transform: "translateY(-50%)",
+          zIndex: 0,
+        }}
+      />
+
+      {/* === NAVE === */}
+      <div
+        ref={shipRef}
+        className={`ship ${lostPoint ? "blink" : ""}`} // 💥 aggiunge classe blink
+        style={{
+          position: "absolute",
+          top: "50%",
+          transform: "translate(0, -50%)",
           transition: "transform 1s ease-out",
+          display: "flex",
+          alignItems: "center",
+          zIndex: 10,
         }}
       >
-        <img src={ASSETS.SHIP} alt="ship" className="ship-img" />
-        <div className="ship-name">{name}</div>
+        <img
+          src={ASSETS.SHIP}
+          alt="ship"
+          className="ship-img"
+          style={{
+            width: "80px",
+            height: "auto",
+            transition: "filter 0.3s",
+          }}
+        />
+        <div
+          className="ship-name"
+          style={{
+            fontWeight: "bold",
+            color: isWinner ? "gold" : "white",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.6)",
+            marginLeft: "10px",
+          }}
+        >
+          {name}
+        </div>
       </div>
     </div>
   );

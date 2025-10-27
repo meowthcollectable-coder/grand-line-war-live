@@ -17,10 +17,10 @@ html, body, #root {
 }
 
 .left-panel {
-  width: 25%;
-  background-color: rgba(0, 0, 0, 0.6);
-  border-right: 2px solid #ffd700;
-  padding: 8px;
+  width: 20%;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-right: 5px solid #ffd700;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -30,7 +30,7 @@ html, body, #root {
 .left-panel h1 {
   text-align: center;
   color: #ffd700;
-  margin: 4px 0;
+  margin: 8px 0;
   font-size: 18px;
   text-shadow: 1px 1px 3px black;
 }
@@ -44,8 +44,8 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
-  padding: 2px 0;
+  font-size: 16px;
+  padding: 5px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -56,14 +56,14 @@ html, body, #root {
 
 .leader-points {
   width: 15%;
-  text-align: right;
+  text-align: center;
 }
 
 .leader-bar {
-  width: 25%;
-  height: 5px;
+  width: 50%;
+  height: 10px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -110,9 +110,9 @@ html, body, #root {
 
 .island-img {
   position: absolute;
-  top: 12%;
+  top: 40%;
   right: 2%;
-  width: 100px;
+  width: 180px;
   height: auto;
   z-index: 2;
 }
@@ -131,12 +131,30 @@ html, body, #root {
 .ship-track {
   position: absolute;
   left: 0;
-  top: 50%;
-  width: 80%;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.15);
+  top: 50%;               /* centrato rispetto alla riga */
+  width: 80%;             /* finisce all’80% del percorso */
+  height: 40px;           /* altezza fissa indipendente dalla nave */
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.22) 0px,
+    rgba(255, 255, 255, 0.22) 25px,
+    rgba(255, 255, 255, 0.1) 50px
+  );
+  border-radius: 6px;
   transform: translateY(-50%);
-  z-index: 1;
+  z-index: 0;             /* dietro la nave */
+  animation: waveMove 8s linear infinite;
+  background-size: 200px 100%;
+}
+
+/* === Animazione del movimento delle onde === */
+@keyframes waveMove {
+  from {
+    background-position-x: 0;
+  }
+  to {
+    background-position-x: 200px;
+  }
 }
 
 .ship {
@@ -160,4 +178,26 @@ html, body, #root {
 
 ::-webkit-scrollbar {
   display: none;
+}
+
+/* 🌊 Effetto onde verticale */
+@keyframes floatShip {
+  0% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(1deg); }
+  50% { transform: translateY(3px) rotate(-1deg); }
+  75% { transform: translateY(-2px) rotate(0.5deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+/* 💥 Effetto lampeggio quando una nave perde punti */
+.blink {
+  animation: blinkAnimation 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes blinkAnimation {
+  0% {
+    filter: brightness(2) saturate(1) hue-rotate(-30deg);
+  }
+  70% {
+    filter: brightness(0.4) saturate(0.8) hue-rotate(30deg);
+  }
 }
