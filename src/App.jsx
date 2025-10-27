@@ -31,7 +31,7 @@ export default function App() {
   const boomRef = useRef(null);
   const finishRef = useRef(null);
 
-  // 🎵 Inizializza i suoni
+  // 🎵 Inizializza suoni
   useEffect(() => {
     dingRef.current = new Howl({ src: [SOUND_URLS.ding], volume: 1, html5: true });
     boomRef.current = new Howl({ src: [SOUND_URLS.boom], volume: 1, html5: true });
@@ -57,7 +57,6 @@ export default function App() {
   // 📊 Aggiorna dati dal Google Sheet
   useEffect(() => {
     let cancelled = false;
-
     async function poll() {
       try {
         const rows = await fetchSheet("1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo", 0);
@@ -68,43 +67,17 @@ export default function App() {
             return parsed.map(p => {
               const before = prev.find(x => x.name === p.name);
 
-              // 🔒 Se la nave era vincitrice, la blocchiamo in fondo
-              if (before && before._forceWin) {
-                return { ...before, points: MAX_POINTS, _forceWin: true };
-              }
-
-              // 💣 Se il giocatore perde punti
+              // 💥 Se il giocatore perde punti
               if (before && p.points < before.points) {
-                // 🎵 Suona boom subito (2s prima che si muova la nave)
                 boomRef.current?.play();
-
-                // Mantiene temporaneamente i punti precedenti
-                const frozen = { ...before, isBlinking: true };
-
-                // ⏱️ Dopo 2 secondi aggiorna visivamente la perdita
+                const updated = { ...p, isBlinking: true };
                 setTimeout(() => {
-                  setPlayers(current =>
-                    current.map(x =>
-                      x.name === p.name
-                        ? { ...x, points: p.points, isBlinking: true }
-                        : x
-                    )
-                  );
-
-                  // 🔁 Rimuove lampeggio dopo 5 secondi
-                  setTimeout(() => {
-                    setPlayers(current =>
-                      current.map(x =>
-                        x.name === p.name ? { ...x, isBlinking: false } : x
-                      )
-                    );
-                  }, 5000);
-                }, 2000);
-
-                return frozen;
+                  updated.isBlinking = false;
+                }, 5000);
+                return updated;
               }
 
-              // 🔔 Se guadagna punti → suono ding
+              // 🔔 Se guadagna punti
               if (before && p.points > before.points) {
                 dingRef.current?.play();
               }
@@ -126,41 +99,47 @@ export default function App() {
     };
   }, []);
 
-  // 🏁 Fine gara
-  const handleFinish = () => {
-    if (!players.length) return;
-    const winner = [...players].sort((a, b) => b.points - a.points)[0];
-    finishRef.current?.play();
-    setPlayers(ps => ps.map(p => p.name === winner.name ? { ...p, _forceWin: true } : p));
-  };
-
   // 📏 Normalizzazione: 0 → 60 punti = 0 → 1 progress
   const normalize = (points) => Math.min(points / MAX_POINTS, 1);
 
+  // 👑 Calcola il leader
+  const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
+
   return (
     <div className="app">
-      {/* PANNELLO SINISTRO */}
+      {/* === PANNELLO SINISTRO === */}
       <div className="left-panel">
 <h1 className="leaderboard-title">LEADERBOARD</h1>
 
         <div className="leaderboard">
           {players.map(p => (
-            <div key={p.name} className="leader-row">
+            <div
+              key={p.name}
+              className="leader-row"
+              style={{
+                color: p.name === leader ? "#FFD700" : "white", // 👑 colore leader
+                fontWeight: p.name === leader ? "bold" : "normal",
+                textShadow: p.name === leader ? "0 0 6px #FFD700" : "none",
+              }}
+            >
               <div className="leader-name">{p.name}</div>
               <div className="leader-points">{p.points}</div>
               <div className="leader-bar">
-                <div style={{ width: `${(p.points / MAX_POINTS) * 100}%` }} />
+                <div
+                  style={{
+                    width: `${(p.points / MAX_POINTS) * 100}%`,
+                    background: p.name === leader
+                      ? "linear-gradient(90deg, #FFD700, #FFF5B0)"
+                      : "linear-gradient(90deg, #00bfff, #00ffcc)",
+                  }}
+                />
               </div>
             </div>
           ))}
         </div>
-
-        <div className="controls-bottom">
-          <button className="finish-btn" onClick={handleFinish}>🏝️ Fine Gara</button>
-        </div>
       </div>
 
-      {/* AREA DI GARA */}
+      {/* === AREA DI GARA === */}
       <div className="race-area">
         <div
           className="sea-bg"
@@ -168,18 +147,17 @@ export default function App() {
             backgroundImage: ASSETS.MAP ? `url(${ASSETS.MAP})` : "none",
           }}
         >
-
           <div className="ships">
             {players.map(p => {
-              const progress = p._forceWin ? 1 : normalize(p.points);
+              const progress = normalize(p.points);
               return (
                 <Ship
                   key={p.name}
                   name={p.name}
                   pirate={p.pirate}
                   progress={progress}
-                  isWinner={!!p._forceWin}
-                  lostPoint={p.isBlinking} // 🔥 lampeggio
+                  isWinner={p.name === leader} // 👑 evidenzia la nave leader
+                  lostPoint={p.isBlinking}
                 />
               );
             })}
