@@ -4,11 +4,17 @@ import Ship from "./components/Ship";
 import { Howl } from "howler";
 import { SOUND_URLS } from "./sounds";
 import { ASSETS } from "./assets";
+import tradimentoImg from "./assets/events/tradimento.png";
+import duelloImg from "./assets/events/duello.png";
+import pioggiaImg from "./assets/events/pioggia.png";
+import tesoroImg from "./assets/events/tesoro.png";
+import tradimentoAudio from "./assets/events/tradimento.mp3";
+import attaccoAudio from "./assets/events/attacco.mp3";
+import pioggiaAudio from "./assets/events/pioggia.mp3";
+import tesoroAudio from "./assets/events/tesoro.mp3";
 import "./styles.css";
 
-// 🔥 LIMITE PUNTI MASSIMO
 const MAX_POINTS = 60;
-
 const DEFAULT_PLAYERS = [
   "carlo","riccardo","daniele","domenico","nicholas","mattia z.","mattia a.","francesca",
   "dario","alessandro p","cristina","pietro s.","pietro d.","vincenzo","francesco",
@@ -26,35 +32,32 @@ function parseRows(rows) {
 
 export default function App() {
   const [players, setPlayers] = useState(DEFAULT_PLAYERS);
+  const [activeEvent, setActiveEvent] = useState(null);
 
   const dingRef = useRef(null);
   const boomRef = useRef(null);
   const finishRef = useRef(null);
 
-  // 🎵 Inizializza suoni
+  const eventSounds = useRef({
+    tradimento: new Howl({ src: [tradimentoAudio], volume: 1, loop: true }),
+    duello: new Howl({ src: [attaccoAudio], volume: 1, loop: true }),
+    pioggia: new Howl({ src: [pioggiaAudio], volume: 1, loop: true }),
+    tesoro: new Howl({ src: [tesoroAudio], volume: 1, loop: true }),
+  });
+
+  const eventImages = {
+    tradimento: tradimentoImg,
+    duello: duelloImg,
+    pioggia: pioggiaImg,
+    tesoro: tesoroImg,
+  };
+
   useEffect(() => {
     dingRef.current = new Howl({ src: [SOUND_URLS.ding], volume: 1, html5: true });
     boomRef.current = new Howl({ src: [SOUND_URLS.boom], volume: 1, html5: true });
     finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
-
-    const unlockAudio = () => {
-      dingRef.current?.play();
-      boomRef.current?.play();
-      finishRef.current?.play();
-      setTimeout(() => {
-        dingRef.current?.stop();
-        boomRef.current?.stop();
-        finishRef.current?.stop();
-      }, 200);
-      window.removeEventListener("touchstart", unlockAudio);
-      window.removeEventListener("click", unlockAudio);
-    };
-
-    window.addEventListener("touchstart", unlockAudio, { once: true });
-    window.addEventListener("click", unlockAudio, { once: true });
   }, []);
 
-  // 📊 Aggiorna dati dal Google Sheet
   useEffect(() => {
     let cancelled = false;
     async function poll() {
@@ -66,8 +69,6 @@ export default function App() {
           setPlayers(prev => {
             return parsed.map(p => {
               const before = prev.find(x => x.name === p.name);
-
-              // 💥 Se il giocatore perde punti
               if (before && p.points < before.points) {
                 boomRef.current?.play();
                 const updated = { ...p, isBlinking: true };
@@ -76,12 +77,9 @@ export default function App() {
                 }, 5000);
                 return updated;
               }
-
-              // 🔔 Se guadagna punti
               if (before && p.points > before.points) {
                 dingRef.current?.play();
               }
-
               return p;
             });
           });
@@ -90,7 +88,6 @@ export default function App() {
         console.error(e);
       }
     }
-
     poll();
     const id = setInterval(poll, 10000);
     return () => {
@@ -99,17 +96,39 @@ export default function App() {
     };
   }, []);
 
-  // 📏 Normalizzazione: 0 → 60 punti = 0 → 1 progress
   const normalize = (points) => Math.min(points / MAX_POINTS, 1);
-
-  // 👑 Calcola il leader
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
+
+  // 🎬 Gestione eventi speciali
+  const toggleEvent = (eventKey) => {
+    const current = eventSounds.current[eventKey];
+
+    // se è già attivo → stoppa
+    if (activeEvent === eventKey) {
+      current.fade(1, 0, 1500);
+      setTimeout(() => current.stop(), 1500);
+      setActiveEvent(null);
+      return;
+    }
+
+    // ferma eventuale evento precedente
+    if (activeEvent) {
+      const prev = eventSounds.current[activeEvent];
+      prev.fade(1, 0, 1500);
+      setTimeout(() => prev.stop(), 1500);
+    }
+
+    // avvia nuovo evento
+    setActiveEvent(eventKey);
+    current.volume(0);
+    current.play();
+    current.fade(0, 1, 1500);
+  };
 
   return (
     <div className="app">
-      {/* === PANNELLO SINISTRO === */}
       <div className="left-panel">
-<h1 className="leaderboard-title">LEADERBOARD</h1>
+        <h1>LEADERBOARD</h1>
 
         <div className="leaderboard">
           {players.map(p => (
@@ -117,9 +136,8 @@ export default function App() {
               key={p.name}
               className="leader-row"
               style={{
-                color: p.name === leader ? "#FFD700" : "white", // 👑 colore leader
+                color: p.name === leader ? "#FFD700" : "white",
                 fontWeight: p.name === leader ? "bold" : "normal",
-                textShadow: p.name === leader ? "0 0 6px #FFD700" : "none",
               }}
             >
               <div className="leader-name">{p.name}</div>
@@ -137,16 +155,21 @@ export default function App() {
             </div>
           ))}
         </div>
+
+        {/* 🎛️ Pannello Eventi (solo locale) */}
+        {window.location.hostname === "localhost" && (
+          <div className="event-controls">
+            <h2>⚡ Eventi Speciali</h2>
+            <button onClick={() => toggleEvent("duello")}>Duello sul Ponte</button>
+            <button onClick={() => toggleEvent("tradimento")}>Tradimento della Ciurma</button>
+            <button onClick={() => toggleEvent("tesoro")}>Tesoro di Skypiea</button>
+            <button onClick={() => toggleEvent("pioggia")}>Pioggia di Berries</button>
+          </div>
+        )}
       </div>
 
-      {/* === AREA DI GARA === */}
       <div className="race-area">
-        <div
-          className="sea-bg"
-          style={{
-            backgroundImage: ASSETS.MAP ? `url(${ASSETS.MAP})` : "none",
-          }}
-        >
+        <div className="sea-bg" style={{ backgroundImage: ASSETS.MAP ? `url(${ASSETS.MAP})` : "none" }}>
           <div className="ships">
             {players.map(p => {
               const progress = normalize(p.points);
@@ -156,13 +179,20 @@ export default function App() {
                   name={p.name}
                   pirate={p.pirate}
                   progress={progress}
-                  isWinner={p.name === leader} // 👑 evidenzia la nave leader
+                  isWinner={p.name === leader}
                   lostPoint={p.isBlinking}
                 />
               );
             })}
           </div>
         </div>
+
+        {/* 🌊 Overlay evento attivo */}
+        {activeEvent && (
+          <div className="event-overlay fade-in">
+            <img src={eventImages[activeEvent]} alt={activeEvent} />
+          </div>
+        )}
       </div>
     </div>
   );
