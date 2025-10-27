@@ -34,7 +34,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
       className="ship-row"
       style={{
         position: "relative",
-        height: "30px",
+        height: "29px",
         overflow: "visible",
         display: "flex",
         alignItems: "center",
