@@ -70,45 +70,58 @@ export default function App() {
     tesoro: tesoroImg,
   };
 
-  useEffect(() => {
-    dingRef.current = new Howl({ src: [SOUND_URLS.ding], volume: 1, html5: true });
-    boomRef.current = new Howl({ src: [SOUND_URLS.boom], volume: 1, html5: true });
-    finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
-  }, []);
+useEffect(() => {
+  let cancelled = false;
 
-  // 📊 Polling punti
-  useEffect(() => {
-    let cancelled = false;
-    async function poll() {
-      try {
-        const rows = await fetchSheet(SHEET_ID, 0);
-        const parsed = parseRows(rows);
-        if (!cancelled) {
-          setPlayers(prev =>
-            parsed.map(p => {
-              const before = prev.find(x => x.name === p.name);
-              const delta = before ? p.points - before.points : 0;
-              if (delta > 0) dingRef.current?.play();
-              if (delta < 0) boomRef.current?.play();
-              if (delta !== 0) {
-                p.deltaPoints = delta;
-                setTimeout(() => { p.deltaPoints = 0; }, 3000);
-              }
-              if (before && p.points < before.points) {
-                return { ...p, blinkUntil: Date.now() + 3000 };
-              }
-              return p;
-            })
-          );
+  async function poll() {
+    try {
+      // 1️⃣ Legge punteggi
+      const rows = await fetchSheet("1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo", 0);
+      const parsed = parseRows(rows);
+
+      // 2️⃣ Legge evento attivo da tab "Eventi"
+      const eventSheet = await fetchSheet("1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo", 1);
+      const currentEvent = eventSheet?.[1]?.Evento || eventSheet?.[1]?.event || "";
+
+      if (!cancelled) {
+        // aggiorna giocatori
+        setPlayers(prev =>
+          parsed.map(p => {
+            const before = prev.find(x => x.name === p.name);
+            const delta = before ? p.points - before.points : 0;
+            if (delta > 0) dingRef.current?.play();
+            if (delta < 0) boomRef.current?.play();
+            if (delta !== 0) {
+              p.deltaPoints = delta;
+              setTimeout(() => { p.deltaPoints = 0; }, 3000);
+            }
+            if (before && p.points < before.points) {
+              return { ...p, blinkUntil: Date.now() + 3000 };
+            }
+            return p;
+          })
+        );
+
+        // 🔥 aggiorna l’evento visibile (anche su Vercel)
+        if (currentEvent && currentEvent !== activeEvent) {
+          setActiveEvent(currentEvent);
+          const sound = eventSounds.current[currentEvent];
+          if (sound) {
+            sound.stop();
+            sound.play();
+          }
         }
-      } catch (e) {
-        console.error(e);
       }
+    } catch (e) {
+      console.error(e);
     }
-    poll();
-    const id = setInterval(poll, 10000);
-    return () => { cancelled = true; clearInterval(id); };
-  }, []);
+  }
+
+  poll();
+  const id = setInterval(poll, 10000);
+  return () => { cancelled = true; clearInterval(id); };
+}, []);
+;
 
   // 📡 Polling evento remoto (anche su Vercel)
   useEffect(() => {
