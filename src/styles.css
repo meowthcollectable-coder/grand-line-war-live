@@ -43,7 +43,7 @@ html, body, #root {
   justify-content: space-between; /* ✅ riempie verticalmente tutta l'altezza */
   overflow-y: hidden;             /* ✅ niente scroll */
   margin-top: 10px;
-  margin-bottom: -80px;            /* lascia spazio ai bottoni (solo locali) */
+  margin-bottom: -130px;            /* lascia spazio ai bottoni (solo locali) */
 }
 
 
@@ -59,13 +59,38 @@ html, body, #root {
 
 
 
+/* 📋 Riga della leaderboard – più compatta */
 .leader-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.6fr;
   align-items: center;
-  justify-content: space-between;
-  font-size: 16px;
-  padding: 5px 0;
-  border-bottom: 4px solid rgba(255, 255, 255, 0.1);
+  gap: 6px; /* meno spazio orizzontale */
+  font-size: clamp(10px, 0.9vw, 13px);
+  line-height: 1; /* riduce l’interlinea */
+  padding: 2px 0; /* meno spazio verticale */
+}
+
+/* Nome, pirata e punti */
+.leader-name,
+.leader-pirate,
+.leader-points {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Barra di avanzamento più sottile */
+.leader-bar {
+  height: 4px; /* metà dello spessore originale */
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.leader-bar div {
+  height: 100%;
+  background: #4d3a39;
+  border-radius: 2px;
 }
 
 .leader-name {
