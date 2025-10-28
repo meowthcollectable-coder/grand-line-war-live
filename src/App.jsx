@@ -4,12 +4,10 @@ import Ship from "./components/Ship";
 import { Howl } from "howler";
 import { SOUND_URLS } from "./sounds";
 import { ASSETS } from "./assets";
-
 import tradimentoImg from "./assets/events/tradimento.png";
 import duelloImg from "./assets/events/duello.png";
 import pioggiaImg from "./assets/events/pioggia.png";
 import tesoroImg from "./assets/events/tesoro.png";
-
 import tradimentoAudio from "./assets/events/tradimento.mp3";
 import attaccoAudio from "./assets/events/attacco.mp3";
 import pioggiaAudio from "./assets/events/pioggia.mp3";
@@ -21,6 +19,7 @@ import leaderboardBg from "./assets/ui/leaderboard.png";
 import "./styles.css";
 
 const MAX_POINTS = 60;
+const SHEET_ID = "1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo"; // stesso foglio
 const DEFAULT_PLAYERS = [
   "carlo","riccardo","daniele","domenico","nicholas","mattia z.","mattia a.","francesca",
   "dario","alessandro p","cristina","pietro s.","pietro d.","vincenzo","francesco",
@@ -34,6 +33,17 @@ function parseRows(rows) {
     points: Number(r.Punti || r.Points || r[Object.keys(r)[2]] || 0)
   })).filter(x => !!x.name);
   return parsed.length ? parsed : DEFAULT_PLAYERS;
+}
+
+// ✍️ Scrive l’evento attivo su Google Sheet
+async function updateEventOnSheet(eventKey) {
+  try {
+    await fetch(
+      `https://script.google.com/macros/s/AKfycbz3LpjFTeUqEztR32GZz3_dU_s6aTIf7gU6JvApvhZfQ0XwT8eRZ-Px0PjHbCeumhrg/exec?event=${eventKey}`
+    );
+  } catch (e) {
+    console.error("Errore aggiornamento evento su Sheet:", e);
+  }
 }
 
 export default function App() {
@@ -66,35 +76,27 @@ export default function App() {
     finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
   }, []);
 
-  // 📊 Polling e gestione punti
+  // 📊 Polling punti
   useEffect(() => {
     let cancelled = false;
     async function poll() {
       try {
-        const rows = await fetchSheet("1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo", 0);
+        const rows = await fetchSheet(SHEET_ID, 0);
         const parsed = parseRows(rows);
-
         if (!cancelled) {
           setPlayers(prev =>
             parsed.map(p => {
               const before = prev.find(x => x.name === p.name);
               const delta = before ? p.points - before.points : 0;
-
-              // 🔊 Suoni
               if (delta > 0) dingRef.current?.play();
               if (delta < 0) boomRef.current?.play();
-
-              // ✨ Pop-up punti
               if (delta !== 0) {
                 p.deltaPoints = delta;
                 setTimeout(() => { p.deltaPoints = 0; }, 3000);
               }
-
-              // 💥 Lampeggio perdita punti (3s)
               if (before && p.points < before.points) {
                 return { ...p, blinkUntil: Date.now() + 3000 };
               }
-
               return p;
             })
           );
@@ -103,25 +105,41 @@ export default function App() {
         console.error(e);
       }
     }
-
     poll();
     const id = setInterval(poll, 10000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
+    return () => { cancelled = true; clearInterval(id); };
   }, []);
+
+  // 📡 Polling evento remoto (anche su Vercel)
+  useEffect(() => {
+    async function checkRemoteEvent() {
+      try {
+        const rows = await fetchSheet(SHEET_ID, 1); // seconda tab “Eventi”
+        const eventKey = rows[0]?.Evento?.toLowerCase?.();
+        if (eventKey && eventKey !== activeEvent) {
+          toggleEvent(eventKey, false); // esegue evento senza riscrivere su sheet
+        }
+      } catch (e) {
+        console.error("Errore lettura evento remoto:", e);
+      }
+    }
+    const id = setInterval(checkRemoteEvent, 5000);
+    return () => clearInterval(id);
+  }, [activeEvent]);
 
   const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
 
   // 🎵 Eventi normali
-  const toggleEvent = eventKey => {
+  const toggleEvent = (eventKey, shouldWrite = true) => {
     const current = eventSounds.current[eventKey];
+    if (!current) return;
+
     if (activeEvent === eventKey) {
       current.fade(1, 0, 1500);
       setTimeout(() => current.stop(), 1500);
       setActiveEvent(null);
+      if (shouldWrite) updateEventOnSheet("");
       return;
     }
 
@@ -135,29 +153,21 @@ export default function App() {
     current.volume(0);
     current.play();
     current.fade(0, 1, 1500);
+
+    if (shouldWrite) updateEventOnSheet(eventKey);
   };
 
   // 🏆 Vittoria finale
   const toggleVictory = () => {
-    if (showVictory) {
-      vittoriaSound.current.fade(1, 0, 1500);
-      setTimeout(() => vittoriaSound.current.stop(), 1500);
-      setShowVictory(false);
-      return;
-    }
-
     vittoriaSound.current.stop();
     vittoriaSound.current.play();
-
-    // immagine e nome dopo 5s
-    setTimeout(() => setShowVictory(true), 3000);
+    setTimeout(() => setShowVictory(true), 3000); // immagine dopo 3s
   };
 
   return (
     <div className="app">
       {/* 🏴‍☠️ Leaderboard */}
-      <div
-        className="left-panel"
+      <div className="left-panel"
         style={{
           backgroundImage: `url(${leaderboardBg})`,
           backgroundSize: "cover",
@@ -182,7 +192,6 @@ export default function App() {
             pointerEvents: "none",
           }}
         />
-
         <h1 style={{ fontSize: "26px", marginBottom: "20px", zIndex: 2 }}>LEADERBOARD</h1>
 
         <div className="leaderboard" style={{ width: "102%", zIndex: 2, paddingLeft: "4%" }}>
@@ -271,7 +280,6 @@ export default function App() {
           </div>
         )}
 
-        {/* 🏆 Overlay Vittoria */}
         {showVictory && (
           <div className="victory-overlay">
             <img src={vittoriaImg} alt="Vittoria" />
@@ -282,4 +290,3 @@ export default function App() {
     </div>
   );
 }
-
