@@ -43,7 +43,7 @@ html, body, #root {
   justify-content: space-between; /* ✅ riempie verticalmente tutta l'altezza */
   overflow-y: hidden;             /* ✅ niente scroll */
   margin-top: 10px;
-  margin-bottom: 50px;            /* lascia spazio ai bottoni (solo locali) */
+  margin-bottom: -80px;            /* lascia spazio ai bottoni (solo locali) */
 }
 
 
