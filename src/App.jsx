@@ -35,7 +35,6 @@ function parseRows(rows) {
   return parsed.length ? parsed : DEFAULT_PLAYERS;
 }
 
-// ✍️ Scrive l’evento attivo su Google Sheet
 async function updateEventOnSheet(eventKey) {
   try {
     await fetch(
@@ -45,6 +44,7 @@ async function updateEventOnSheet(eventKey) {
     console.error("Errore aggiornamento evento su Sheet:", e);
   }
 }
+
 
 export default function App() {
   const [players, setPlayers] = useState(DEFAULT_PLAYERS);
