@@ -82,8 +82,9 @@ export default function App() {
         const parsed = parseRows(rows);
 
         // 2️⃣ Legge l’evento attivo dal foglio "Eventi"
-        const eventSheet = await fetchSheet(SHEET_ID, 1);
-        const currentEvent = eventSheet?.[1]?.Evento || eventSheet?.[1]?.event || "";
+     const eventSheet = await fetchSheet(SHEET_ID, 1);
+const currentEvent = eventSheet?.[0]?.Evento || eventSheet?.[0]?.event || "";
+
 
         if (!cancelled) {
           // Aggiorna giocatori
