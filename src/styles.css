@@ -116,13 +116,37 @@ html, body, #root {
   background: linear-gradient(180deg, #004466, #001a33);
 }
 
+/* 🌊 Sfondo principale */
 .sea-bg {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  background-size: cover;
+  background-image: url("./assets/map.jpg"); /* ✅ sfondo PC */
   background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: #001a33;
+  transition: background-image 0.8s ease-in-out;
 }
+
+/* 🌊 Versione iPad / Tablet */
+@media only screen 
+  and (min-device-width: 768px) 
+  and (max-device-width: 1024px) 
+  and (orientation: portrait),
+only screen 
+  and (min-device-width: 768px) 
+  and (max-device-width: 1366px) 
+  and (orientation: landscape) {
+  .sea-bg {
+    background-image: url("./assets/mapipad.jpg") !important; /* ✅ forza immagine iPad */
+    background-size: cover;
+    background-position: center center;
+  }
+}
+
 
 .island-img {
   position: absolute;
@@ -239,15 +263,85 @@ html, body, #root {
   background: #ff6666;
 }
 
+/* 🌟 Overlay evento speciale */
 .event-overlay {
-  position: absolute;
-  inset: 0;
+  position: fixed; /* ✅ fissa sopra tutto lo schermo */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0,0,0,0.5);
-  z-index: 100;
+  background: rgba(0, 0, 0, 0.3); /* leggero oscuramento dello sfondo */
+  z-index: 9999; /* ✅ sempre sopra navi e leaderboard */
+  pointer-events: none; /* non blocca click sotto */
+  animation: fadeIn 0.8s ease-in-out;
 }
+
+.event-overlay img {
+  width: 70%; /* 🔽 ridotta del 15% rispetto a prima (da 85 → 70%) */
+  height: auto;
+  filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.6));
+  animation: popIn 0.6s ease-in-out;
+}
+
+/* Effetti di animazione */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+/* 📱 Leaderboard autoscalata per iPad / tablet */
+@media only screen 
+  and (min-device-width: 768px)
+  and (max-device-width: 1366px) {
+
+  .left-panel {
+    padding: 8px 12px;
+    background-size: 100% 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .left-panel h1 {
+    font-size: clamp(14px, 2vw, 22px);
+    margin-bottom: 8px;
+  }
+
+  .leaderboard {
+    transform: scale(0.80); /* ✅ riduzione del 15% per farci stare tutto */
+    transform-origin: top center;
+    width: 118%; /* compensa il ridimensionamento */
+    margin-top: 10px;
+  }
+
+  .leader-row {
+    font-size: clamp(9px, 1.2vw, 12px);
+    padding: 2px 0;
+    gap: 4px;
+  }
+
+  .leader-bar div {
+    height: 5px !important; /* più sottile su tablet */
+  }
+
+  .leader-name, .leader-points {
+    line-height: 1.1;
+  }
+}
+
 
 .event-overlay img {
   height: 70vh;              /* 70% dell’altezza visibile */
@@ -372,4 +466,26 @@ html, body, #root {
 
 .ship-img {
   width: clamp(30px, 4vw, 48px);
+}
+/* 🌊 Sfondo principale */
+.sea-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("./assets/map.jpg"); /* immagine standard desktop */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* 🌊 Versione ottimizzata per iPad (formato 4:3 o simile) */
+@media screen and (max-aspect-ratio: 4/3) and (min-width: 700px) {
+  .sea-bg {
+    background-image: url("./assets/mapipad.jpg");
+    background-size: contain; /* per adattarsi senza tagliare */
+    background-position: center center;
+    background-color: #002b5c; /* tinta mare sotto */
+  }
 }

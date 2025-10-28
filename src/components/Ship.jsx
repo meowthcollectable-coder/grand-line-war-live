@@ -50,10 +50,10 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
           left: "5%", // ⬅️ tutto inizia 5% più a destra
           top: "50%",
           width: "75%", // ⬅️ fine invariata
-          height: "11px",
+          height: "7px",
           background: "rgba(255,255,255,0.15)",
           borderRadius: "4px",
-          transform: "translateY(-50%)",
+          transform: "translateY(-160%)",
           zIndex: 0,
         }}
       />
@@ -64,7 +64,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
         className={`ship ${lostPoint ? "blink" : ""} ${tilt ? "tilt" : ""}`}
         style={{
           position: "absolute",
-          top: "50%",
+          top: "0%",
           left: "5%", // ⬅️ nave allineata al nuovo offset
           transform: "translate(0, -55%)",
           transition: "transform 1s ease-out",
@@ -80,7 +80,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
             style={{
               position: "absolute",
               left: "-25px", // offset locale dietro la nave
-              top: "50%",
+              top: "80%",
               transform: "translateY(-50%)",
               width: "35px",
               height: "12px",
@@ -125,7 +125,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
             position: "absolute",
             top: "50%",
             left: "110%",
-            transform: "translateY(-50%)",
+            transform: "translateY(-40%)",
             fontWeight: "bold",
             color: isWinner ? "gold" : "white",
             textShadow: "1px 1px 3px rgba(0,0,0,0.6)",
