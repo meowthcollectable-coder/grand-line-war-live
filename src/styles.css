@@ -628,4 +628,31 @@ only screen
 .event-controls button:active {
   transform: scale(0.9);
 }
+/* 💻 Ottimizzazione per schermi grandi (es. PC desktop) */
+@media (min-height: 900px) {
+  .leaderboard {
+    padding-top: 0px;
+    padding-bottom: 150px;
+  }
+
+  .leader-row {
+    padding: 1px 0;          /* meno spazio verticale */
+    gap: 4px;                /* più compatto */
+    font-size: 11px;         /* leggermente più piccolo */
+    line-height: 0.8;
+  }
+
+  .leader-bar {
+    height: 3px;             /* barra più sottile */
+  }
+}
+
+/* 🧭 Ottimizzazione per schermi piccoli (tablet / iPad) */
+@media (max-height: 899px) {
+  .leader-row {
+    padding: 2px 0;
+    gap: 6px;
+    font-size: 13px;
+  }
+}
 
