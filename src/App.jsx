@@ -220,15 +220,16 @@ export default function App() {
 
 
         {/* 🎛️ Pannello Eventi (solo su localhost) */}
-        {window.location.hostname === "localhost" && (
-          <div className="event-controls" style={{ marginTop: "auto", zIndex: 2 }}>
-            <h2>⚡ Eventi Speciali</h2>
-            <button onClick={() => toggleEvent("duello")}>Duello sul Ponte</button>
-            <button onClick={() => toggleEvent("tradimento")}>Tradimento della Ciurma</button>
-            <button onClick={() => toggleEvent("tesoro")}>Tesoro di Skypiea</button>
-            <button onClick={() => toggleEvent("pioggia")}>Pioggia di Berries</button>
-          </div>
-        )}
+        {/* 🎛️ Pannello Eventi (solo locale) */}
+
+{window.location.hostname === "localhost" && (
+  <div className="event-controls">
+    <button title="Duello" onClick={() => toggleEvent("duello")}>⚔️</button>
+    <button title="Tradimento" onClick={() => toggleEvent("tradimento")}>☠️</button>
+    <button title="Tesoro" onClick={() => toggleEvent("tesoro")}>💰</button>
+    <button title="Pioggia" onClick={() => toggleEvent("pioggia")}>🌧️</button>
+  </div>
+)}
       </div>
 
       {/* 🌊 Area gara */}
