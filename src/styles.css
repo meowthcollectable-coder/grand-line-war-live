@@ -35,10 +35,17 @@ html, body, #root {
   text-shadow: 1px 1px 3px black;
 }
 
+/* 📜 Lista giocatori dentro la pergamena */
 .leaderboard {
-  flex-grow: 1;
-  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* ✅ riempie verticalmente tutta l'altezza */
+  overflow-y: hidden;             /* ✅ niente scroll */
+  margin-top: 10px;
+  margin-bottom: 50px;            /* lascia spazio ai bottoni (solo locali) */
 }
+
 
 .leaderboard-title {
   font-family: "Syne Mono", monospace;  /* ✅ nuovo font */
