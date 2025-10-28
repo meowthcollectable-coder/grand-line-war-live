@@ -1,12 +1,13 @@
 import React, { useRef, useEffect, useState } from "react";
 import { ASSETS } from "../assets";
 
-export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
+export default function Ship({ name, pirate, progress, isWinner, lostPoint, deltaPoints }) {
   const trackRef = useRef(null);
   const shipRef = useRef(null);
   const [prevProgress, setPrevProgress] = useState(progress);
   const [tilt, setTilt] = useState(false);
   const [showTrail, setShowTrail] = useState(false);
+  const [showDelta, setShowDelta] = useState(false);
 
   useEffect(() => {
     if (trackRef.current && shipRef.current) {
@@ -29,6 +30,15 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
     }
   }, [progress]);
 
+  // 🎯 Mostra popup punti quando deltaPoints cambia
+  useEffect(() => {
+    if (deltaPoints && deltaPoints !== 0) {
+      setShowDelta(true);
+      const timer = setTimeout(() => setShowDelta(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [deltaPoints]);
+
   return (
     <div
       className="ship-row"
@@ -47,9 +57,9 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
         className="ship-track"
         style={{
           position: "absolute",
-          left: "5%", // ⬅️ tutto inizia 5% più a destra
+          left: "5%",
           top: "50%",
-          width: "75%", // ⬅️ fine invariata
+          width: "75%",
           height: "7px",
           background: "rgba(255,255,255,0.15)",
           borderRadius: "4px",
@@ -65,7 +75,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
         style={{
           position: "absolute",
           top: "0%",
-          left: "5%", // ⬅️ nave allineata al nuovo offset
+          left: "5%",
           transform: "translate(0, -55%)",
           transition: "transform 1s ease-out",
           display: "flex",
@@ -79,7 +89,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
             className="ship-trail"
             style={{
               position: "absolute",
-              left: "-25px", // offset locale dietro la nave
+              left: "-25px",
               top: "80%",
               transform: "translateY(-50%)",
               width: "35px",
@@ -105,6 +115,30 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
             alignItems: "center",
           }}
         >
+          {/* 🔢 Popup punti */}
+         {showDelta && (
+  <div
+    className="points-popup"
+    style={{
+      position: "absolute",
+      top: "-25px", // 🔽 più vicino alla nave
+      left: "50%",
+      transform: "translateX(-50%)",
+      fontWeight: "bold",
+      fontSize: "18px",
+      color: deltaPoints > 0 ? "limegreen" : "red",
+      textShadow:
+        "0 0 3px white, 0 0 6px rgba(255,255,255,0.6), 1px 1px 0 white", // ✅ bordo bianco luminoso
+      animation: "popupFade 3s ease-out forwards",
+      zIndex: 1000,
+      pointerEvents: "none",
+    }}
+  >
+    {deltaPoints > 0 ? `+${deltaPoints}` : `${deltaPoints}`}
+  </div>
+)}
+
+
           <img
             src={ASSETS.SHIP}
             alt="ship"
@@ -127,7 +161,7 @@ export default function Ship({ name, pirate, progress, isWinner, lostPoint }) {
             left: "110%",
             transform: "translateY(-40%)",
             fontWeight: "bold",
-            color: isWinner ? "gold" : "white",
+            color: "white",
             textShadow: "1px 1px 3px rgba(0,0,0,0.6)",
             fontSize: "11px",
             whiteSpace: "nowrap",

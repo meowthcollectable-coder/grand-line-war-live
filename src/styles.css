@@ -51,7 +51,7 @@ html, body, #root {
   font-family: "Syne Mono", monospace;  /* ✅ nuovo font */
   color: #453736;
   text-align: center;
-  font-size: 24px;
+  font-size: 4px;
   letter-spacing: 2px;
   text-shadow: 1px 1px 3px black;
   margin: 0 0 10px 0;
@@ -261,19 +261,21 @@ only screen
   75% { transform: translateY(-2px) rotate(0.5deg); }
   100% { transform: translateY(0) rotate(0deg); }
 }
-/* 💥 Effetto lampeggio quando una nave perde punti */
+
+/* 💥 Effetto "danno" da videogioco — perdita di opacità intermittente */
 .blink {
-  animation: blinkAnimation 0.5s ease-in-out infinite alternate;
+  animation: flickerDamage 0.3s ease-in-out infinite alternate;
 }
 
-@keyframes blinkAnimation {
+@keyframes flickerDamage {
   0% {
-    filter: brightness(2) saturate(1) hue-rotate(-30deg);
+    opacity: 1;
   }
-  70% {
-    filter: brightness(0.4) saturate(0.8) hue-rotate(30deg);
+  100% {
+    opacity: 0.2;
   }
 }
+
 /* ⚙️ Bottoni eventi piccoli e in orizzontale */
 .event-controls {
   position: absolute;
@@ -656,3 +658,64 @@ only screen
   }
 }
 
+@keyframes popupFade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -10px) scale(0.8);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -20px) scale(1.05);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -30px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -45px) scale(1.1);
+  }
+}
+/* 🏆 Overlay Vittoria */
+.victory-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 9999;
+  flex-direction: column;
+  opacity: 0;
+  animation: fadeZoomIn 1s ease-out forwards;
+}
+
+.victory-overlay img {
+  width: 70%;
+  max-width: 900px;
+  opacity: 0.9;
+  animation: fadeZoomIn 1s ease-out forwards;
+}
+
+.victory-winner {
+  position: absolute;
+  color: #fff;
+  font-size: 6vw;
+  font-weight: 900;
+  text-align: center;
+  top: 40%; /* 🟢 Spostato più in alto del 10% rispetto al centro */
+  transform: translateY(-50%);
+  text-shadow: 0 0 20px black, 0 0 40px black;
+  animation: fadeZoomIn 1.5s ease-out forwards;
+}
+
+@keyframes fadeZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

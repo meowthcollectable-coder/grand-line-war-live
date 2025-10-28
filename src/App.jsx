@@ -4,15 +4,20 @@ import Ship from "./components/Ship";
 import { Howl } from "howler";
 import { SOUND_URLS } from "./sounds";
 import { ASSETS } from "./assets";
+
 import tradimentoImg from "./assets/events/tradimento.png";
 import duelloImg from "./assets/events/duello.png";
 import pioggiaImg from "./assets/events/pioggia.png";
 import tesoroImg from "./assets/events/tesoro.png";
+
 import tradimentoAudio from "./assets/events/tradimento.mp3";
 import attaccoAudio from "./assets/events/attacco.mp3";
 import pioggiaAudio from "./assets/events/pioggia.mp3";
 import tesoroAudio from "./assets/events/tesoro.mp3";
-import leaderboardBg from "./assets/ui/leaderboard.png"; // 🧭 nuova immagine sfondo
+import vittoriaAudio from "./assets/events/vittoria.mp3";
+import vittoriaImg from "./assets/events/vittoria.png";
+import leaderboardBg from "./assets/ui/leaderboard.png";
+
 import "./styles.css";
 
 const MAX_POINTS = 60;
@@ -34,10 +39,12 @@ function parseRows(rows) {
 export default function App() {
   const [players, setPlayers] = useState(DEFAULT_PLAYERS);
   const [activeEvent, setActiveEvent] = useState(null);
+  const [showVictory, setShowVictory] = useState(false);
 
   const dingRef = useRef(null);
   const boomRef = useRef(null);
   const finishRef = useRef(null);
+  const vittoriaSound = useRef(new Howl({ src: [vittoriaAudio], volume: 1 }));
 
   const eventSounds = useRef({
     tradimento: new Howl({ src: [tradimentoAudio], volume: 1, loop: true }),
@@ -59,6 +66,7 @@ export default function App() {
     finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
   }, []);
 
+  // 📊 Polling e gestione punti
   useEffect(() => {
     let cancelled = false;
     async function poll() {
@@ -67,28 +75,35 @@ export default function App() {
         const parsed = parseRows(rows);
 
         if (!cancelled) {
-          setPlayers(prev => {
-            return parsed.map(p => {
+          setPlayers(prev =>
+            parsed.map(p => {
               const before = prev.find(x => x.name === p.name);
+              const delta = before ? p.points - before.points : 0;
+
+              // 🔊 Suoni
+              if (delta > 0) dingRef.current?.play();
+              if (delta < 0) boomRef.current?.play();
+
+              // ✨ Pop-up punti
+              if (delta !== 0) {
+                p.deltaPoints = delta;
+                setTimeout(() => { p.deltaPoints = 0; }, 3000);
+              }
+
+              // 💥 Lampeggio perdita punti (3s)
               if (before && p.points < before.points) {
-                boomRef.current?.play();
-                const updated = { ...p, isBlinking: true };
-                setTimeout(() => {
-                  updated.isBlinking = false;
-                }, 5000);
-                return updated;
+                return { ...p, blinkUntil: Date.now() + 3000 };
               }
-              if (before && p.points > before.points) {
-                dingRef.current?.play();
-              }
+
               return p;
-            });
-          });
+            })
+          );
         }
       } catch (e) {
         console.error(e);
       }
     }
+
     poll();
     const id = setInterval(poll, 10000);
     return () => {
@@ -97,10 +112,11 @@ export default function App() {
     };
   }, []);
 
-  const normalize = (points) => Math.min(points / MAX_POINTS, 1);
+  const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
 
-  const toggleEvent = (eventKey) => {
+  // 🎵 Eventi normali
+  const toggleEvent = eventKey => {
     const current = eventSounds.current[eventKey];
     if (activeEvent === eventKey) {
       current.fade(1, 0, 1500);
@@ -121,18 +137,31 @@ export default function App() {
     current.fade(0, 1, 1500);
   };
 
+  // 🏆 Vittoria finale
+  const toggleVictory = () => {
+    if (showVictory) {
+      vittoriaSound.current.fade(1, 0, 1500);
+      setTimeout(() => vittoriaSound.current.stop(), 1500);
+      setShowVictory(false);
+      return;
+    }
+
+    vittoriaSound.current.stop();
+    vittoriaSound.current.play();
+
+    // immagine e nome dopo 5s
+    setTimeout(() => setShowVictory(true), 3000);
+  };
+
   return (
     <div className="app">
-      {/* 🏴‍☠️ Leaderboard con pergamena */}
+      {/* 🏴‍☠️ Leaderboard */}
       <div
         className="left-panel"
         style={{
           backgroundImage: `url(${leaderboardBg})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          boxShadow: "inset 0 0 80px rgba(0,0,0,0.8)", // effetto bruciatura
-          position: "relative",
           color: "#fff",
           fontFamily: "'Syne Mono', monospace",
           textShadow: "2px 2px 5px rgba(0,0,0,0.8)",
@@ -141,9 +170,9 @@ export default function App() {
           alignItems: "center",
           justifyContent: "flex-start",
           padding: "25px 10px",
+          position: "relative",
         }}
       >
-        {/* Overlay per migliorare contrasto */}
         <div
           style={{
             position: "absolute",
@@ -156,106 +185,97 @@ export default function App() {
 
         <h1 style={{ fontSize: "26px", marginBottom: "20px", zIndex: 2 }}>LEADERBOARD</h1>
 
-<div className="leaderboard" style={{ width: "102%", zIndex: 2 }}>
-  {players.map((p) => (
-    <div
-      key={p.name}
-      className="leader-row"
-      style={{
-        color: "white",
-        fontWeight: "normal",
-        display: "grid",
-        gridTemplateColumns: "1.2fr 1fr 0.6fr", // nome | pirata | punti
-        alignItems: "center",
-        gap: "8px",
-        marginBottom: "4px",
-      }}
-    >
-      <div className="leader-name" style={{ textAlign: "left" }}>
-        {p.name}
-      </div>
+        <div className="leaderboard" style={{ width: "102%", zIndex: 2, paddingLeft: "4%" }}>
+          {players.map(p => (
+            <div key={p.name} className="leader-row"
+              style={{
+                color: "white",
+                fontWeight: "normal",
+                display: "grid",
+                gridTemplateColumns: "1.2fr 1fr 0.6fr",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "4px",
+              }}
+            >
+              <div className="leader-name" style={{ textAlign: "left" }}>{p.name}</div>
+              <div className="leader-pirate"
+                style={{
+                  fontStyle: "italic",
+                  color: "#ffffff",
+                  opacity: 0.9,
+                  fontSize: "13px",
+                  textAlign: "center",
+                }}
+              >
+                {p.pirate || "-"}
+              </div>
+              <div className="leader-points" style={{ textAlign: "right" }}>{p.points}</div>
+              <div className="leader-bar"
+                style={{
+                  gridColumn: "1 / span 3",
+                  height: "6px",
+                  background: "rgba(255,255,255,0.15)",
+                  borderRadius: "3px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${(p.points / MAX_POINTS) * 100}%`,
+                    height: "100%",
+                    background: "linear-gradient(90deg, #4d3a39, #3b2a29)",
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
 
-      {/* 💀 Pirata */}
-      <div
-        className="leader-pirate"
-        style={{
-          fontStyle: "italic",
-          color: "#ffffff",
-          opacity: 0.9,
-          fontSize: "13px",
-          textAlign: "center",
-        }}
-      >
-        {p.pirate || "-"}
-      </div>
-
-      {/* 🏴‍☠️ Punti */}
-      <div className="leader-points" style={{ textAlign: "right" }}>
-        {p.points}
-      </div>
-
-      {/* 📊 Barra di progresso */}
-      <div
-  className="leader-bar"
-  style={{
-    gridColumn: "1 / span 3",
-    height: "6px",
-    background: "rgba(255,255,255,0.15)",
-    borderRadius: "3px",
-    overflow: "hidden",
-  }}
->
-  <div
-    style={{
-      width: `${(p.points / MAX_POINTS) * 100}%`,
-      height: "100%",
-      background: "linear-gradient(90deg, #4d3a39, #3b2a29)",
-    }}
-  />
-</div>
-
-    </div>
-  ))}
-</div>
-
-
-        {/* 🎛️ Pannello Eventi (solo su localhost) */}
-        {/* 🎛️ Pannello Eventi (solo locale) */}
-
-{window.location.hostname === "localhost" && (
-  <div className="event-controls">
-    <button title="Duello" onClick={() => toggleEvent("duello")}>⚔️</button>
-    <button title="Tradimento" onClick={() => toggleEvent("tradimento")}>☠️</button>
-    <button title="Tesoro" onClick={() => toggleEvent("tesoro")}>💰</button>
-    <button title="Pioggia" onClick={() => toggleEvent("pioggia")}>🌧️</button>
-  </div>
-)}
+        {window.location.hostname === "localhost" && (
+          <div className="event-controls">
+            <button title="Vittoria Finale" onClick={toggleVictory}>🏆</button>
+            <button title="Duello" onClick={() => toggleEvent("duello")}>⚔️</button>
+            <button title="Tradimento" onClick={() => toggleEvent("tradimento")}>☠️</button>
+            <button title="Tesoro" onClick={() => toggleEvent("tesoro")}>💰</button>
+            <button title="Pioggia" onClick={() => toggleEvent("pioggia")}>🌧️</button>
+          </div>
+        )}
       </div>
 
       {/* 🌊 Area gara */}
       <div className="race-area">
         <div className="sea-bg" style={{ backgroundImage: ASSETS.MAP ? `url(${ASSETS.MAP})` : "none" }}>
           <div className="ships">
-            {players.map((p) => {
+            {players.map(p => {
               const progress = normalize(p.points);
+              const isBlinking = p.blinkUntil && Date.now() < p.blinkUntil;
               return (
                 <Ship
                   key={p.name}
                   name={p.name}
                   pirate={p.pirate}
                   progress={progress}
-                  isWinner={p.name === leader}
-                  lostPoint={p.isBlinking}
+                  isWinner={false}
+                  lostPoint={isBlinking}
+                  deltaPoints={p.deltaPoints}
                 />
               );
             })}
           </div>
         </div>
 
-        {/* 🌅 Overlay evento */}
         {activeEvent && (
           <div className="event-overlay fade-in">
             <img src={eventImages[activeEvent]} alt={activeEvent} />
+          </div>
+        )}
+
+        {/* 🏆 Overlay Vittoria */}
+        {showVictory && (
+          <div className="victory-overlay">
+            <img src={vittoriaImg} alt="Vittoria" />
+            <h1 className="victory-winner">{leader?.toUpperCase() || "—"}</h1>
           </div>
         )}
       </div>
