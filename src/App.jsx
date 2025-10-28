@@ -39,7 +39,7 @@ function parseRows(rows) {
 async function updateEventOnSheet(eventKey) {
   try {
     await fetch(
-      `https://script.google.com/macros/s/AKfycbz3LpjFTeUqEztR32GZz3_dU_s6aTIf7gU6JvApvhZfQ0XwT8eRZ-Px0PjHbCeumhrg/exec?event=${eventKey}`
+      `https://script.google.com/macros/s/AKfycbxWNbZuTiVPwV2JnHiUwjfGQv_x7X81N4LfW5vD61eehyhpbl_rFL7cqpY5X2-H3xj2/exec?event=${eventKey}`
     );
   } catch (e) {
     console.error("Errore aggiornamento evento su Sheet:", e);
