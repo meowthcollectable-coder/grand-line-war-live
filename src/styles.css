@@ -193,7 +193,7 @@ only screen
   position: relative;
   width: 100%;
   height: 100%;
-  transform: translatey(14%); /* ✅ sposta in basso tutto il gruppo navi+tracciati */
+  transform: translate(-6%, 14%); /* ✅ sposta in basso tutto il gruppo navi+tracciati */
 }
 
 .ship-row {
