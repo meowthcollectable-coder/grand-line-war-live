@@ -81,10 +81,19 @@ export default function App() {
         const rows = await fetchSheet(SHEET_ID, 0);
         const parsed = parseRows(rows);
 
-        // 2️⃣ Legge l’evento attivo dal foglio "Eventi"
-     const eventSheet = await fetchSheet(SHEET_ID, 1);
+     // 2️⃣ Legge l’evento attivo dal foglio "Eventi" (via opensheet.elk.sh)
+const eventSheet = await fetchSheet(SHEET_ID, 1);
 const currentEvent = eventSheet?.[0]?.Evento || eventSheet?.[0]?.event || "";
 
+// 🔊 Se c'è un nuovo evento dal foglio → attiva audio/immagine
+if (!cancelled && currentEvent && currentEvent !== activeEvent) {
+  setActiveEvent(currentEvent);
+  const sound = eventSounds.current[currentEvent];
+  if (sound) {
+    sound.stop();
+    sound.play();
+  }
+}
 
         if (!cancelled) {
           // Aggiorna giocatori
