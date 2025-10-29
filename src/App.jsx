@@ -9,25 +9,26 @@ import tradimentoImg from "./assets/events/tradimento.png";
 import duelloImg from "./assets/events/duello.png";
 import pioggiaImg from "./assets/events/pioggia.png";
 import tesoroImg from "./assets/events/tesoro.png";
+import fruttoImg from "./assets/events/frutto.png";
 import vittoriaImg from "./assets/events/vittoria.png";
 
 import tradimentoAudio from "./assets/events/tradimento.mp3";
 import attaccoAudio from "./assets/events/attacco.mp3";
 import pioggiaAudio from "./assets/events/pioggia.mp3";
 import tesoroAudio from "./assets/events/tesoro.mp3";
+import fruttoAudio from "./assets/events/frutto.mp3";
 import vittoriaAudio from "./assets/events/vittoria.mp3";
 
 import leaderboardBg from "./assets/ui/leaderboard.png";
 import "./styles.css";
 
-// SAFE POINT + Eventi da Google Sheet
 const MAX_POINTS = 60;
 const SHEET_ID = "1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo";
 
 const DEFAULT_PLAYERS = [
-  "carlo","riccardo","daniele","domenico","nicholas","mattia z.","mattia a.","francesca",
-  "dario","alessandro p","cristina","pietro s.","pietro d.","vincenzo","francesco",
-  "giuseppe","alessandro a.","diego","andrea","filippo","felice","simone","roberto","christian"
+  "carlo", "riccardo", "daniele", "domenico", "nicholas", "mattia z.", "mattia a.", "francesca",
+  "dario", "alessandro p", "cristina", "pietro s.", "pietro d.", "vincenzo", "francesco",
+  "giuseppe", "alessandro a.", "diego", "andrea", "filippo", "felice", "simone", "roberto", "christian"
 ].map(n => ({ name: n, pirate: "", points: 0 }));
 
 function parseRows(rows) {
@@ -54,6 +55,7 @@ export default function App() {
     duello: new Howl({ src: [attaccoAudio], volume: 1, loop: true }),
     pioggia: new Howl({ src: [pioggiaAudio], volume: 1, loop: true }),
     tesoro: new Howl({ src: [tesoroAudio], volume: 1, loop: true }),
+    frutto: new Howl({ src: [fruttoAudio], volume: 1, loop: true }),
   });
 
   const eventImages = {
@@ -61,6 +63,7 @@ export default function App() {
     duello: duelloImg,
     pioggia: pioggiaImg,
     tesoro: tesoroImg,
+    frutto: fruttoImg,
   };
 
   useEffect(() => {
@@ -72,12 +75,10 @@ export default function App() {
   // 📊 Polling classifica
   useEffect(() => {
     let cancelled = false;
-
     async function poll() {
       try {
         const rows = await fetchSheet(SHEET_ID, 0);
         const parsed = parseRows(rows);
-
         if (!cancelled) {
           setPlayers(prev =>
             parsed.map(p => {
@@ -100,71 +101,72 @@ export default function App() {
         console.error(e);
       }
     }
-
     poll();
     const id = setInterval(poll, 5000);
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
-  // 🔔 Polling EVENTI dalla tab "Eventi" (gid=1)
+  // 🔔 Polling EVENTI da Google Sheet (gid=433893229)
   useEffect(() => {
     let cancelled = false;
-
     async function pollEvents() {
       try {
         const evRows = await fetchSheet(SHEET_ID, 433893229);
-
         const getYes = (rowIdx) =>
           (evRows?.[rowIdx]?.B || "").toString().trim().toUpperCase() === "SI";
 
         const flags = {
-  duello: getYes(0),
-  tradimento: getYes(1),
-  tesoro: getYes(2),
-  pioggia: getYes(3),
-  vittoria: getYes(4), // <-- la riga della Vittoria è la quinta, non la sesta
-};
+          duello: getYes(0),
+          tradimento: getYes(1),
+          tesoro: getYes(2),
+          pioggia: getYes(3),
+          frutto: getYes(4),
+          vittoria: getYes(5),
+        };
 
+        const allEvents = ["duello", "tradimento", "tesoro", "pioggia", "frutto"];
+        const activeKey = allEvents.find(k => flags[k]) || null;
 
-        const nextEvent =
-          (flags.duello && "duello") ||
-          (flags.tradimento && "tradimento") ||
-          (flags.tesoro && "tesoro") ||
-          (flags.pioggia && "pioggia") ||
-          null;
-
-        if (!cancelled && nextEvent !== activeEvent) {
-          Object.values(eventSounds.current).forEach((s) => s.stop());
-          if (nextEvent) {
-            const s = eventSounds.current[nextEvent];
-            s.volume(0);
-            s.play();
-            s.fade(0, 1, 800);
+        // ▶️ Attiva evento
+        if (!cancelled && activeKey && activeKey !== activeEvent) {
+          Object.values(eventSounds.current).forEach(s => s.stop());
+          const sound = eventSounds.current[activeKey];
+          if (sound) {
+            sound.stop();
+            sound.volume(0);
+            sound.play();
+            sound.fade(0, 1, 1500);
           }
-          setActiveEvent(nextEvent);
+          setActiveEvent(activeKey);
         }
 
-        if (!cancelled && !nextEvent && activeEvent) {
-          const s = eventSounds.current[activeEvent];
-          s?.fade(1, 0, 800);
-          setTimeout(() => s?.stop(), 800);
-          setActiveEvent(null);
+        // ⏹️ Disattiva evento
+        if (!cancelled && !activeKey && activeEvent) {
+          const sound = eventSounds.current[activeEvent];
+          if (sound) {
+            sound.fade(1, 0, 1500);
+            setTimeout(() => sound.stop(), 1500);
+          }
+          setTimeout(() => setActiveEvent(null), 1000);
         }
 
+        // 🏆 Vittoria
         if (!cancelled && flags.vittoria && !showVictory) {
           vittoriaSound.current.stop();
+          vittoriaSound.current.volume(0);
           vittoriaSound.current.play();
-          setTimeout(() => setShowVictory(true), 3000);
+          vittoriaSound.current.fade(0, 1, 1500);
+          setShowVictory(true);
         }
         if (!cancelled && !flags.vittoria && showVictory) {
-          vittoriaSound.current.fade(1, 0, 1000);
+          vittoriaSound.current.fade(1, 0, 1500);
+          setTimeout(() => vittoriaSound.current.stop(), 1500);
           setTimeout(() => setShowVictory(false), 1000);
         }
       } catch (e) {
         console.error("Polling eventi error:", e);
       }
     }
-
     pollEvents();
     const id = setInterval(pollEvents, 4000);
     return () => { cancelled = true; clearInterval(id); };
@@ -172,32 +174,6 @@ export default function App() {
 
   const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
-
-  // 🎵 Controlli manuali (admin)
-  const toggleEvent = (eventKey) => {
-    const current = eventSounds.current[eventKey];
-    if (activeEvent === eventKey) {
-      current.fade(1, 0, 1500);
-      setTimeout(() => current.stop(), 1500);
-      setActiveEvent(null);
-      return;
-    }
-    if (activeEvent) {
-      const prev = eventSounds.current[activeEvent];
-      prev.fade(1, 0, 1500);
-      setTimeout(() => prev.stop(), 1500);
-    }
-    setActiveEvent(eventKey);
-    current.volume(0);
-    current.play();
-    current.fade(0, 1, 1500);
-  };
-
-  const toggleVictory = () => {
-    vittoriaSound.current.stop();
-    vittoriaSound.current.play();
-    setTimeout(() => setShowVictory(true), 3000);
-  };
 
   return (
     <div className="app">
@@ -280,8 +256,6 @@ export default function App() {
             </div>
           ))}
         </div>
-
-        
       </div>
 
       {/* 🌊 Area gara */}

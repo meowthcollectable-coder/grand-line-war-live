@@ -13,22 +13,3 @@ export async function fetchSheet(sheetId, gid = 0) {
     return obj;
   });
 }
-
-.fade-in {
-  opacity: 0;
-  animation: fadeIn 1.2s forwards;
-}
-
-.fade-out {
-  animation: fadeOut 1s forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
