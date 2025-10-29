@@ -17,7 +17,7 @@ html, body, #root {
 }
 
 .left-panel {
-  width: 18%;
+  width: 8%;
   background-color: #6b4a29;
   border-right: 2px solid #000;
   padding: 20px;
@@ -719,4 +719,3 @@ only screen
     transform: scale(1);
   }
 }
-

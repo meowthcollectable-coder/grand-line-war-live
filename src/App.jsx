@@ -63,81 +63,48 @@ export default function App() {
     tesoro: tesoroImg,
   };
 
-  // 🔔 Polling EVENTI dalla tab "Eventi" (gid=1)
-useEffect(() => {
-  let cancelled = false;
+  useEffect(() => {
+    dingRef.current = new Howl({ src: [SOUND_URLS.ding], volume: 1, html5: true });
+    boomRef.current = new Howl({ src: [SOUND_URLS.boom], volume: 1, html5: true });
+    finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
+  }, []);
 
-  async function pollEvents() {
-    try {
-      const evRows = await fetchSheet(SHEET_ID, 433893229);
+  // 📊 Polling classifica
+  useEffect(() => {
+    let cancelled = false;
 
-      const getYes = (rowIdx) =>
-        (evRows?.[rowIdx]?.B || "").toString().trim().toUpperCase() === "SI";
+    async function poll() {
+      try {
+        const rows = await fetchSheet(SHEET_ID, 0);
+        const parsed = parseRows(rows);
 
-      const flags = {
-        duello: getYes(0),
-        tradimento: getYes(1),
-        tesoro: getYes(2),
-        pioggia: getYes(3),
-        vittoria: getYes(4),
-      };
-
-      const allEvents = ["duello", "tradimento", "tesoro", "pioggia"];
-      const activeKey = allEvents.find((k) => flags[k]) || null;
-
-      // Attiva evento nuovo
-      if (!cancelled && activeKey && activeKey !== activeEvent) {
-        console.log(`▶️ Attiva evento: ${activeKey}`);
-        Object.values(eventSounds.current).forEach((s) => s.stop());
-        const sound = eventSounds.current[activeKey];
-        if (sound) {
-          sound.stop();
-          sound.volume(0);
-          sound.play();
-          sound.fade(0, 1, 1500);
+        if (!cancelled) {
+          setPlayers(prev =>
+            parsed.map(p => {
+              const before = prev.find(x => x.name === p.name);
+              const delta = before ? p.points - before.points : 0;
+              if (delta > 0) dingRef.current?.play();
+              if (delta < 0) boomRef.current?.play();
+              if (delta !== 0) {
+                p.deltaPoints = delta;
+                setTimeout(() => { p.deltaPoints = 0; }, 3000);
+              }
+              if (before && p.points < before.points) {
+                return { ...p, blinkUntil: Date.now() + 3000 };
+              }
+              return p;
+            })
+          );
         }
-        setActiveEvent(activeKey);
+      } catch (e) {
+        console.error(e);
       }
-
-      // Disattiva evento corrente
-      if (!cancelled && !activeKey && activeEvent) {
-        console.log(`⏹️ Disattiva evento: ${activeEvent}`);
-        const sound = eventSounds.current[activeEvent];
-        if (sound) {
-          sound.fade(1, 0, 1500);
-          setTimeout(() => sound.stop(), 1500);
-        }
-        // fade-out immagine
-        setTimeout(() => setActiveEvent(null), 1000);
-      }
-
-      // Gestione Vittoria
-      if (!cancelled && flags.vittoria && !showVictory) {
-        console.log("🏆 Vittoria ATTIVA");
-        vittoriaSound.current.stop();
-        vittoriaSound.current.volume(0);
-        vittoriaSound.current.play();
-        vittoriaSound.current.fade(0, 1, 1500);
-        setShowVictory(true);
-      }
-
-      if (!cancelled && !flags.vittoria && showVictory) {
-        console.log("🏆 Vittoria DISATTIVA");
-        vittoriaSound.current.fade(1, 0, 1500);
-        setTimeout(() => vittoriaSound.current.stop(), 1500);
-        setTimeout(() => setShowVictory(false), 1000);
-      }
-
-    } catch (e) {
-      console.error("Polling eventi error:", e);
     }
-  }
 
-  pollEvents();
-  const id = setInterval(pollEvents, 4000);
-  return () => { cancelled = true; clearInterval(id); };
-}, [activeEvent, showVictory]);
-
+    poll();
+    const id = setInterval(poll, 5000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
 
   // 🔔 Polling EVENTI dalla tab "Eventi" (gid=1)
   useEffect(() => {
