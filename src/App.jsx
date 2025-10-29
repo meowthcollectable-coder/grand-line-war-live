@@ -206,7 +206,7 @@ export default function App() {
         />
         <h1 style={{ fontSize: "26px", marginBottom: "20px", zIndex: 2 }}>LEADERBOARD</h1>
 
-        <div className="leaderboard" style={{ width: "110%", zIndex: 2, paddingLeft: "10%" }}>
+        <div className="leaderboard" style={{ width: "110%", zIndex: 2, paddingLeft: "20%" }}>
           {players.map(p => (
             <div
               key={p.name}
