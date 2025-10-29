@@ -22,7 +22,6 @@ import "./styles.css";
 
 const MAX_POINTS = 60;
 const SHEET_ID = "1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyrWxxSlHsYJlNyYw1hX9cz2z3-Qce6sXN1wKqSGh8aTFynwW6iVwFRRDq8K0NLEUjXEg/exec";
 
 const DEFAULT_PLAYERS = [
   "carlo","riccardo","daniele","domenico","nicholas","mattia z.","mattia a.","francesca",
@@ -42,7 +41,6 @@ function parseRows(rows) {
 export default function App() {
   const [players, setPlayers] = useState(DEFAULT_PLAYERS);
   const [activeEvent, setActiveEvent] = useState(null);
-  const [lastEventHandled, setLastEventHandled] = useState("");
   const [showVictory, setShowVictory] = useState(false);
 
   const dingRef = useRef(null);
@@ -64,16 +62,13 @@ export default function App() {
     tesoro: tesoroImg,
   };
 
- useEffect(() => {
-  // ✅ Sblocca automaticamente l’audio dopo la prima interazione
-  Howler.autoUnlock = true;
+  useEffect(() => {
+    dingRef.current = new Howl({ src: [SOUND_URLS.ding], volume: 1, html5: true });
+    boomRef.current = new Howl({ src: [SOUND_URLS.boom], volume: 1, html5: true });
+    finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
+  }, []);
 
-  dingRef.current = new Howl({ src: [SOUND_URLS.ding], volume: 1, html5: true });
-  boomRef.current = new Howl({ src: [SOUND_URLS.boom], volume: 1, html5: true });
-  finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
-}, []);
-
-
+  // 📊 Polling classifica
   useEffect(() => {
     let cancelled = false;
 
@@ -82,83 +77,58 @@ export default function App() {
         const rows = await fetchSheet(SHEET_ID, 0);
         const parsed = parseRows(rows);
 
-        const res = await fetch(`https://opensheet.elk.sh/${SHEET_ID}/Eventi`);
-const eventSheet = await res.json();
-const currentEvent = eventSheet?.[0]?.Evento || eventSheet?.[0]?.event || "";
-console.log("📢 Evento letto (OpenSheet):", currentEvent);
-
-
-        if (!currentEvent) {
-          console.log("🟢 Nessun evento attivo");
-        }
-
-        if (!cancelled && currentEvent && currentEvent !== lastEventHandled) {
-          console.log("🚨 Nuovo evento:", currentEvent);
-          setActiveEvent(currentEvent);
-          setLastEventHandled(currentEvent);
-
-          const sound = eventSounds.current[currentEvent];
-          if (sound) {
-            sound.stop();
-            sound.play();
-          }
-
-          setTimeout(() => {
-            sound?.fade(1, 0, 1500);
-            setTimeout(() => sound?.stop(), 1500);
-            setActiveEvent(null);
-          }, 10000);
-
-          setTimeout(async () => {
-            try {
-              await fetch(`${SCRIPT_URL}?event=`);
-              console.log("✅ Evento resettato su Google Sheet");
-            } catch (err) {
-              console.error("Errore reset evento:", err);
-            }
-          }, 11000);
-        }
-
         if (!cancelled) {
-          setPlayers(parsed);
+          setPlayers(prev =>
+            parsed.map(p => {
+              const before = prev.find(x => x.name === p.name);
+              const delta = before ? p.points - before.points : 0;
+              if (delta > 0) dingRef.current?.play();
+              if (delta < 0) boomRef.current?.play();
+              if (delta !== 0) {
+                p.deltaPoints = delta;
+                setTimeout(() => { p.deltaPoints = 0; }, 3000);
+              }
+              if (before && p.points < before.points) {
+                return { ...p, blinkUntil: Date.now() + 3000 };
+              }
+              return p;
+            })
+          );
         }
       } catch (e) {
-        console.error("Errore polling:", e);
+        console.error(e);
       }
     }
 
     poll();
     const id = setInterval(poll, 5000);
     return () => { cancelled = true; clearInterval(id); };
-  }, [lastEventHandled]);
+  }, []);
 
   const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
 
- // ✍️ Scrive e resetta l’evento su Google Sheet (visibile per 40s)
-async function updateEventOnSheet(eventKey) {
-  try {
-    // Attiva evento
-    await fetch(
-      `https://script.google.com/macros/s/AKfycbyrWxxSlHsYJlNyYw1hX9cz2z3-Qce6sXN1wKqSGh8aTFynwW6iVwFRRDq8K0NLEUjXEg/exec?event=${eventKey}`
-    );
-    console.log(`✅ Evento "${eventKey}" scritto su Google Sheet`);
+  // 🎵 Attiva evento manuale (solo locale)
+  const toggleEvent = (eventKey) => {
+    const current = eventSounds.current[eventKey];
+    if (activeEvent === eventKey) {
+      current.fade(1, 0, 1500);
+      setTimeout(() => current.stop(), 1500);
+      setActiveEvent(null);
+      return;
+    }
+    if (activeEvent) {
+      const prev = eventSounds.current[activeEvent];
+      prev.fade(1, 0, 1500);
+      setTimeout(() => prev.stop(), 1500);
+    }
+    setActiveEvent(eventKey);
+    current.volume(0);
+    current.play();
+    current.fade(0, 1, 1500);
+  };
 
-    // Mantiene il valore per 40 secondi
-    setTimeout(async () => {
-      await fetch(
-        `https://script.google.com/macros/s/AKfycbyrWxxSlHsYJlNyYw1hX9cz2z3-Qce6sXN1wKqSGh8aTFynwW6iVwFRRDq8K0NLEUjXEg/exec?event=`
-      );
-      console.log(`🔁 Evento "${eventKey}" resettato su Google Sheet`);
-    }, 40000);
-  } catch (e) {
-    console.error("Errore aggiornamento evento su Sheet:", e);
-  }
-}
-
-
-
-  const toggleEvent = eventKey => updateEventOnSheet(eventKey);
+  // 🏆 Vittoria finale
   const toggleVictory = () => {
     vittoriaSound.current.stop();
     vittoriaSound.current.play();
@@ -167,65 +137,117 @@ async function updateEventOnSheet(eventKey) {
 
   return (
     <div className="app">
-      <div className="left-panel" style={{
-        backgroundImage: `url(${leaderboardBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        color: "#fff",
-        fontFamily: "'Syne Mono', monospace",
-        textShadow: "2px 2px 5px rgba(0,0,0,0.8)",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        padding: "25px 10px",
-        position: "relative",
-      }}>
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "rgba(0,0,0,0.25)",
-          borderRadius: "8px",
-          pointerEvents: "none",
-        }} />
+      {/* 🏴‍☠️ Leaderboard */}
+      <div
+        className="left-panel"
+        style={{
+          backgroundImage: `url(${leaderboardBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          color: "#fff",
+          fontFamily: "'Syne Mono', monospace",
+          textShadow: "2px 2px 5px rgba(0,0,0,0.8)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          padding: "25px 10px",
+          position: "relative",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "rgba(0,0,0,0.25)",
+            borderRadius: "8px",
+            pointerEvents: "none",
+          }}
+        />
         <h1 style={{ fontSize: "26px", marginBottom: "20px", zIndex: 2 }}>LEADERBOARD</h1>
-        <div className="leaderboard" style={{ width: "102%", zIndex: 2, paddingLeft: "4%" }}>
+
+        <div className="leaderboard" style={{ width: "110%", zIndex: 2, paddingLeft: "4%" }}>
           {players.map(p => (
-            <div key={p.name} className="leader-row" style={{
-              color: "white", fontWeight: "normal",
-              display: "grid",
-              gridTemplateColumns: "1.2fr 1fr 0.8fr",
-              alignItems: "center", gap: "8px", marginBottom: "4px"
-            }}>
+            <div
+              key={p.name}
+              className="leader-row"
+              style={{
+                color: "white",
+                fontWeight: "normal",
+                display: "grid",
+                gridTemplateColumns: "1.3fr 1fr 0.8fr",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "4px",
+              }}
+            >
               <div className="leader-name" style={{ textAlign: "left" }}>{p.name}</div>
-              <div className="leader-pirate" style={{
-                fontStyle: "italic", color: "#ffffff", opacity: 0.9,
-                fontSize: "13px", textAlign: "center"
-              }}>{p.pirate || "-"}</div>
+              <div
+                className="leader-pirate"
+                style={{
+                  fontStyle: "italic",
+                  color: "#ffffff",
+                  opacity: 0.9,
+                  fontSize: "13px",
+                  textAlign: "center",
+                }}
+              >
+                {p.pirate || "-"}
+              </div>
               <div className="leader-points" style={{ textAlign: "right" }}>{p.points}</div>
-              <div className="leader-bar" style={{
-                gridColumn: "1 / span 3", height: "6px",
-                background: "rgba(255,255,255,0.15)", borderRadius: "3px", overflow: "hidden"
-              }}>
-                <div style={{
-                  width: `${(p.points / MAX_POINTS) * 100}%`,
-                  height: "100%", background: "linear-gradient(90deg, #4d3a39, #3b2a29)"
-                }} />
+              <div
+                className="leader-bar"
+                style={{
+                  gridColumn: "1 / span 3",
+                  height: "6px",
+                  background: "rgba(255,255,255,0.15)",
+                  borderRadius: "3px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${(p.points / MAX_POINTS) * 100}%`,
+                    height: "100%",
+                    background: "linear-gradient(90deg, #4d3a39, #3b2a29)",
+                  }}
+                />
               </div>
             </div>
           ))}
         </div>
 
-        {window.location.hostname === "localhost" && (
-          <div className="event-controls">
-            <button title="Vittoria Finale" onClick={toggleVictory}>🏆</button>
-            <button title="Duello" onClick={() => toggleEvent("duello")}>⚔️</button>
-            <button title="Tradimento" onClick={() => toggleEvent("tradimento")}>☠️</button>
-            <button title="Tesoro" onClick={() => toggleEvent("tesoro")}>💰</button>
-            <button title="Pioggia" onClick={() => toggleEvent("pioggia")}>🌧️</button>
-          </div>
-        )}
+        {/* 🎛️ Controlli eventi visibili ovunque, ma cliccabili solo se admin */}
+{(() => {
+  const isAdmin =
+    window.location.search.includes("admin=true") ||
+    window.location.hostname === "localhost";
+
+  return (
+    <div className="event-controls" style={{ opacity: isAdmin ? 1 : 0.5 }}>
+      <button title="Vittoria Finale" onClick={isAdmin ? toggleVictory : null} disabled={!isAdmin}>
+        🏆
+      </button>
+      <button title="Duello" onClick={isAdmin ? () => toggleEvent("duello") : null} disabled={!isAdmin}>
+        ⚔️
+      </button>
+      <button title="Tradimento" onClick={isAdmin ? () => toggleEvent("tradimento") : null} disabled={!isAdmin}>
+        ☠️
+      </button>
+      <button title="Tesoro" onClick={isAdmin ? () => toggleEvent("tesoro") : null} disabled={!isAdmin}>
+        💰
+      </button>
+      <button title="Pioggia" onClick={isAdmin ? () => toggleEvent("pioggia") : null} disabled={!isAdmin}>
+        🌧️
+      </button>
+    </div>
+  );
+})()}
+
+
       </div>
 
+      {/* 🌊 Area gara */}
       <div className="race-area">
         <div className="sea-bg" style={{ backgroundImage: ASSETS.MAP ? `url(${ASSETS.MAP})` : "none" }}>
           <div className="ships">
@@ -247,12 +269,14 @@ async function updateEventOnSheet(eventKey) {
           </div>
         </div>
 
+        {/* 🌅 Overlay evento */}
         {activeEvent && (
           <div className="event-overlay fade-in">
             <img src={eventImages[activeEvent]} alt={activeEvent} />
           </div>
         )}
 
+        {/* 🏆 Overlay Vittoria */}
         {showVictory && (
           <div className="victory-overlay">
             <img src={vittoriaImg} alt="Vittoria" />
@@ -263,4 +287,3 @@ async function updateEventOnSheet(eventKey) {
     </div>
   );
 }
-
