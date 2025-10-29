@@ -118,12 +118,13 @@ export default function App() {
           (evRows?.[rowIdx]?.B || "").toString().trim().toUpperCase() === "SI";
 
         const flags = {
-          duello: getYes(0),
-          tradimento: getYes(1),
-          tesoro: getYes(2),
-          pioggia: getYes(3),
-          vittoria: getYes(5),
-        };
+  duello: getYes(0),
+  tradimento: getYes(1),
+  tesoro: getYes(2),
+  pioggia: getYes(3),
+  vittoria: getYes(4), // <-- la riga della Vittoria è la quinta, non la sesta
+};
+
 
         const nextEvent =
           (flags.duello && "duello") ||
