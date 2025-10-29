@@ -82,8 +82,11 @@ export default function App() {
         const rows = await fetchSheet(SHEET_ID, 0);
         const parsed = parseRows(rows);
 
-        const eventSheet = await fetchSheet(SHEET_ID, 1);
-        const currentEvent = eventSheet?.[0]?.Evento || eventSheet?.[0]?.event || "";
+        const res = await fetch(`https://opensheet.elk.sh/${SHEET_ID}/Eventi`);
+const eventSheet = await res.json();
+const currentEvent = eventSheet?.[0]?.Evento || eventSheet?.[0]?.event || "";
+console.log("📢 Evento letto (OpenSheet):", currentEvent);
+
 
         if (!currentEvent) {
           console.log("🟢 Nessun evento attivo");
@@ -132,26 +135,27 @@ export default function App() {
   const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
 
- // ✍️ Aggiorna l’evento su Google Sheet e resetta dopo 20s
+ // ✍️ Scrive e resetta l’evento su Google Sheet (visibile per 40s)
 async function updateEventOnSheet(eventKey) {
   try {
-    // 1️⃣ Scrive l'evento
+    // Attiva evento
     await fetch(
       `https://script.google.com/macros/s/AKfycbyrWxxSlHsYJlNyYw1hX9cz2z3-Qce6sXN1wKqSGh8aTFynwW6iVwFRRDq8K0NLEUjXEg/exec?event=${eventKey}`
     );
     console.log(`✅ Evento "${eventKey}" scritto su Google Sheet`);
 
-    // 2️⃣ Dopo 20 secondi lo resetta
+    // Mantiene il valore per 40 secondi
     setTimeout(async () => {
       await fetch(
         `https://script.google.com/macros/s/AKfycbyrWxxSlHsYJlNyYw1hX9cz2z3-Qce6sXN1wKqSGh8aTFynwW6iVwFRRDq8K0NLEUjXEg/exec?event=`
       );
       console.log(`🔁 Evento "${eventKey}" resettato su Google Sheet`);
-    }, 20000);
+    }, 40000);
   } catch (e) {
     console.error("Errore aggiornamento evento su Sheet:", e);
   }
 }
+
 
 
   const toggleEvent = eventKey => updateEventOnSheet(eventKey);
