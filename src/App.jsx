@@ -22,7 +22,7 @@ import vittoriaAudio from "./assets/events/vittoria.mp3";
 import leaderboardBg from "./assets/ui/leaderboard.png";
 import "./styles.css";
 
-const MAX_POINTS = 60;
+const MAX_POINTS = 86;
 const SHEET_ID = "1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo";
 
 const DEFAULT_PLAYERS = [
