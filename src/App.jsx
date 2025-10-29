@@ -64,11 +64,15 @@ export default function App() {
     tesoro: tesoroImg,
   };
 
-  useEffect(() => {
-    dingRef.current = new Howl({ src: [SOUND_URLS.ding], volume: 1, html5: true });
-    boomRef.current = new Howl({ src: [SOUND_URLS.boom], volume: 1, html5: true });
-    finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
-  }, []);
+ useEffect(() => {
+  // ✅ Sblocca automaticamente l’audio dopo la prima interazione
+  Howler.autoUnlock = true;
+
+  dingRef.current = new Howl({ src: [SOUND_URLS.ding], volume: 1, html5: true });
+  boomRef.current = new Howl({ src: [SOUND_URLS.boom], volume: 1, html5: true });
+  finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
+}, []);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -128,18 +132,27 @@ export default function App() {
   const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
 
-  async function updateEventOnSheet(eventKey) {
-    try {
-      await fetch(`${SCRIPT_URL}?event=${eventKey}`);
-      console.log(`✅ Evento "${eventKey}" scritto su Google Sheet`);
-      setTimeout(async () => {
-        await fetch(`${SCRIPT_URL}?event=`);
-        console.log(`🔁 Evento "${eventKey}" resettato su Google Sheet`);
-      }, 10000);
-    } catch (e) {
-      console.error("Errore aggiornamento evento su Sheet:", e);
-    }
+ // ✍️ Aggiorna l’evento su Google Sheet e resetta dopo 20s
+async function updateEventOnSheet(eventKey) {
+  try {
+    // 1️⃣ Scrive l'evento
+    await fetch(
+      `https://script.google.com/macros/s/AKfycbyrWxxSlHsYJlNyYw1hX9cz2z3-Qce6sXN1wKqSGh8aTFynwW6iVwFRRDq8K0NLEUjXEg/exec?event=${eventKey}`
+    );
+    console.log(`✅ Evento "${eventKey}" scritto su Google Sheet`);
+
+    // 2️⃣ Dopo 20 secondi lo resetta
+    setTimeout(async () => {
+      await fetch(
+        `https://script.google.com/macros/s/AKfycbyrWxxSlHsYJlNyYw1hX9cz2z3-Qce6sXN1wKqSGh8aTFynwW6iVwFRRDq8K0NLEUjXEg/exec?event=`
+      );
+      console.log(`🔁 Evento "${eventKey}" resettato su Google Sheet`);
+    }, 20000);
+  } catch (e) {
+    console.error("Errore aggiornamento evento su Sheet:", e);
   }
+}
+
 
   const toggleEvent = eventKey => updateEventOnSheet(eventKey);
   const toggleVictory = () => {
