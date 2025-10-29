@@ -23,11 +23,9 @@ import "./styles.css";
 const MAX_POINTS = 60;
 const SHEET_ID = "1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo";
 const DEFAULT_PLAYERS = [
-  "carlo", "riccardo", "daniele", "domenico", "nicholas",
-  "mattia z.", "mattia a.", "francesca", "dario", "alessandro p",
-  "cristina", "pietro s.", "pietro d.", "vincenzo", "francesco",
-  "giuseppe", "alessandro a.", "diego", "andrea", "filippo",
-  "felice", "simone", "roberto", "christian"
+  "carlo","riccardo","daniele","domenico","nicholas","mattia z.","mattia a.","francesca",
+  "dario","alessandro p","cristina","pietro s.","pietro d.","vincenzo","francesco",
+  "giuseppe","alessandro a.","diego","andrea","filippo","felice","simone","roberto","christian"
 ].map(n => ({ name: n, pirate: "", points: 0 }));
 
 function parseRows(rows) {
@@ -43,13 +41,13 @@ export default function App() {
   const [players, setPlayers] = useState(DEFAULT_PLAYERS);
   const [activeEvent, setActiveEvent] = useState(null);
   const [showVictory, setShowVictory] = useState(false);
+  const [lastEventHandled, setLastEventHandled] = useState(null);
 
   const dingRef = useRef(null);
   const boomRef = useRef(null);
   const finishRef = useRef(null);
   const vittoriaSound = useRef(new Howl({ src: [vittoriaAudio], volume: 1 }));
 
-  // 🎵 Effetti sonori degli eventi
   const eventSounds = useRef({
     tradimento: new Howl({ src: [tradimentoAudio], volume: 1, loop: true }),
     duello: new Howl({ src: [attaccoAudio], volume: 1, loop: true }),
@@ -57,7 +55,6 @@ export default function App() {
     tesoro: new Howl({ src: [tesoroAudio], volume: 1, loop: true }),
   });
 
-  // 🖼️ Immagini eventi
   const eventImages = {
     tradimento: tradimentoImg,
     duello: duelloImg,
@@ -71,32 +68,48 @@ export default function App() {
     finishRef.current = new Howl({ src: [SOUND_URLS.finish], volume: 1, html5: true });
   }, []);
 
-  // 📊 POLLING punti + evento
+  // 📊 Polling punteggi + eventi
   useEffect(() => {
     let cancelled = false;
 
     async function poll() {
       try {
-        // 1️⃣ Legge i punteggi
+        // 📈 Classifica
         const rows = await fetchSheet(SHEET_ID, 0);
         const parsed = parseRows(rows);
 
-     // 2️⃣ Legge l’evento attivo dal foglio "Eventi" (via opensheet.elk.sh)
-const eventSheet = await fetchSheet(SHEET_ID, 1);
-const currentEvent = eventSheet?.[0]?.Evento || eventSheet?.[0]?.event || "";
+        // 🎯 Evento attivo dal foglio "Eventi"
+        const eventSheet = await fetchSheet(SHEET_ID, 1);
+        const currentEvent = eventSheet?.[0]?.Evento || eventSheet?.[0]?.event || "";
 
-// 🔊 Se c'è un nuovo evento dal foglio → attiva audio/immagine
-if (!cancelled && currentEvent && currentEvent !== activeEvent) {
-  setActiveEvent(currentEvent);
-  const sound = eventSounds.current[currentEvent];
-  if (sound) {
-    sound.stop();
-    sound.play();
-  }
-}
+        // 🟡 Se c'è un nuovo evento e non è già stato gestito
+        if (!cancelled && currentEvent && currentEvent !== lastEventHandled) {
+          console.log("🚨 Nuovo evento:", currentEvent);
+          setActiveEvent(currentEvent);
+          setLastEventHandled(currentEvent);
+
+          const sound = eventSounds.current[currentEvent];
+          if (sound) {
+            sound.stop();
+            sound.play();
+          }
+
+          // Dopo 10s: spegne suono e immagine
+          setTimeout(() => {
+            sound?.fade(1, 0, 1500);
+            setTimeout(() => sound?.stop(), 1500);
+            setActiveEvent(null);
+          }, 10000);
+
+          // Dopo 11s: resetta evento nel foglio
+          setTimeout(async () => {
+            await fetch(`https://script.google.com/macros/s/AKfycbxWNbZuTiVPwV2JnHiUwjfGQv_x7X81N4LfW5vD61eehyhpbl_rFL7cqpY5X2-H3xj2/exec?event=`);
+            console.log("✅ Evento resettato su Google Sheet dopo esecuzione");
+          }, 11000);
+        }
 
         if (!cancelled) {
-          // Aggiorna giocatori
+          // ⚓ Aggiorna i punteggi
           setPlayers(prev =>
             parsed.map(p => {
               const before = prev.find(x => x.name === p.name);
@@ -113,149 +126,95 @@ if (!cancelled && currentEvent && currentEvent !== activeEvent) {
               return p;
             })
           );
-
-          // 🎬 Se è cambiato l’evento sul foglio → aggiorna su Vercel
-          if (currentEvent && currentEvent !== activeEvent) {
-            setActiveEvent(currentEvent);
-            const sound = eventSounds.current[currentEvent];
-            if (sound) {
-              sound.stop();
-              sound.play();
-            }
-          }
         }
+
       } catch (e) {
-        console.error(e);
+        console.error("Errore polling:", e);
       }
     }
 
     poll();
-    const id = setInterval(poll, 5000); // ⚡ refresh ogni 5s
+    const id = setInterval(poll, 5000);
     return () => { cancelled = true; clearInterval(id); };
-  }, [activeEvent]);
+  }, [lastEventHandled]);
 
   const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
 
-  // ✍️ Aggiorna foglio Google (solo da locale)
+  // ✍️ Aggiorna evento su Google Sheet e resetta dopo 10s
   async function updateEventOnSheet(eventKey) {
     try {
-      await fetch(
-        `https://script.google.com/macros/s/AKfycbxWNbZuTiVPwV2JnHiUwjfGQv_x7X81N4LfW5vD61eehyhpbl_rFL7cqpY5X2-H3xj2/exec?event=${encodeURIComponent(eventKey)}`
-      );
+      await fetch(`https://script.google.com/macros/s/AKfycbxWNbZuTiVPwV2JnHiUwjfGQv_x7X81N4LfW5vD61eehyhpbl_rFL7cqpY5X2-H3xj2/exec?event=${eventKey}`);
+      console.log(`✅ Evento "${eventKey}" scritto su Google Sheet`);
+      setTimeout(async () => {
+        await fetch(`https://script.google.com/macros/s/AKfycbxWNbZuTiVPwV2JnHiUwjfGQv_x7X81N4LfW5vD61eehyhpbl_rFL7cqpY5X2-H3xj2/exec?event=`);
+        console.log(`🔁 Evento "${eventKey}" resettato su Google Sheet`);
+      }, 10000);
     } catch (e) {
       console.error("Errore aggiornamento evento su Sheet:", e);
     }
   }
 
-  // 🎵 Attiva evento manuale (solo locale)
-  const toggleEvent = (eventKey) => {
-    updateEventOnSheet(eventKey); // aggiorna anche su Google Sheet
-    const current = eventSounds.current[eventKey];
-    if (activeEvent === eventKey) {
-      current.fade(1, 0, 1500);
-      setTimeout(() => current.stop(), 1500);
-      setActiveEvent(null);
-      return;
-    }
-    if (activeEvent) {
-      const prev = eventSounds.current[activeEvent];
-      prev.fade(1, 0, 1500);
-      setTimeout(() => prev.stop(), 1500);
-    }
-    setActiveEvent(eventKey);
-    current.volume(0);
-    current.play();
-    current.fade(0, 1, 1500);
+  const toggleEvent = eventKey => {
+    updateEventOnSheet(eventKey);
   };
 
-  // 🏆 Vittoria finale
   const toggleVictory = () => {
     vittoriaSound.current.stop();
     vittoriaSound.current.play();
-    setTimeout(() => setShowVictory(true), 3000); // immagine dopo 3s
+    setTimeout(() => setShowVictory(true), 3000);
   };
 
   return (
     <div className="app">
       {/* 🏴‍☠️ Leaderboard */}
-      <div
-        className="left-panel"
-        style={{
-          backgroundImage: `url(${leaderboardBg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          color: "#fff",
-          fontFamily: "'Syne Mono', monospace",
-          textShadow: "2px 2px 5px rgba(0,0,0,0.8)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "flex-start",
-          padding: "25px 10px",
-          position: "relative",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(0,0,0,0.25)",
-            borderRadius: "8px",
-            pointerEvents: "none",
-          }}
-        />
-
+      <div className="left-panel" style={{
+        backgroundImage: `url(${leaderboardBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        color: "#fff",
+        fontFamily: "'Syne Mono', monospace",
+        textShadow: "2px 2px 5px rgba(0,0,0,0.8)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        padding: "25px 10px",
+        position: "relative",
+      }}>
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "rgba(0,0,0,0.25)",
+          borderRadius: "8px",
+          pointerEvents: "none",
+        }} />
         <h1 style={{ fontSize: "26px", marginBottom: "20px", zIndex: 2 }}>LEADERBOARD</h1>
-
         <div className="leaderboard" style={{ width: "102%", zIndex: 2, paddingLeft: "4%" }}>
           {players.map(p => (
-            <div key={p.name} className="leader-row"
-              style={{
-                color: "white",
-                fontWeight: "normal",
-                display: "grid",
-                gridTemplateColumns: "1.2fr 1fr 0.6fr",
-                alignItems: "center",
-                gap: "8px",
-                marginBottom: "4px",
-              }}
-            >
+            <div key={p.name} className="leader-row" style={{
+              color: "white", fontWeight: "normal",
+              display: "grid", gridTemplateColumns: "1.2fr 1fr 0.6fr",
+              alignItems: "center", gap: "8px", marginBottom: "4px"
+            }}>
               <div className="leader-name" style={{ textAlign: "left" }}>{p.name}</div>
-              <div className="leader-pirate"
-                style={{
-                  fontStyle: "italic",
-                  color: "#ffffff",
-                  opacity: 0.9,
-                  fontSize: "13px",
-                  textAlign: "center",
-                }}
-              >
-                {p.pirate || "-"}
-              </div>
+              <div className="leader-pirate" style={{
+                fontStyle: "italic", color: "#ffffff", opacity: 0.9,
+                fontSize: "13px", textAlign: "center"
+              }}>{p.pirate || "-"}</div>
               <div className="leader-points" style={{ textAlign: "right" }}>{p.points}</div>
-              <div className="leader-bar"
-                style={{
-                  gridColumn: "1 / span 3",
-                  height: "6px",
-                  background: "rgba(255,255,255,0.15)",
-                  borderRadius: "3px",
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${(p.points / MAX_POINTS) * 100}%`,
-                    height: "100%",
-                    background: "linear-gradient(90deg, #4d3a39, #3b2a29)",
-                  }}
-                />
+              <div className="leader-bar" style={{
+                gridColumn: "1 / span 3", height: "6px",
+                background: "rgba(255,255,255,0.15)", borderRadius: "3px", overflow: "hidden"
+              }}>
+                <div style={{
+                  width: `${(p.points / MAX_POINTS) * 100}%`,
+                  height: "100%", background: "linear-gradient(90deg, #4d3a39, #3b2a29)"
+                }} />
               </div>
             </div>
           ))}
         </div>
 
-        {/* 🎛️ Pannello eventi visibile solo su localhost */}
         {window.location.hostname === "localhost" && (
           <div className="event-controls">
             <button title="Vittoria Finale" onClick={toggleVictory}>🏆</button>
