@@ -20,6 +20,7 @@ import vittoriaAudio from "./assets/events/vittoria.mp3";
 import leaderboardBg from "./assets/ui/leaderboard.png";
 import "./styles.css";
 
+// SAFE POINT - Versione stabile con admin control
 const MAX_POINTS = 60;
 const SHEET_ID = "1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo";
 
@@ -108,7 +109,7 @@ export default function App() {
   const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
 
-  // 🎵 Attiva evento manuale (solo locale)
+  // 🎵 Attiva evento
   const toggleEvent = (eventKey) => {
     const current = eventSounds.current[eventKey];
     if (activeEvent === eventKey) {
@@ -217,34 +218,27 @@ export default function App() {
           ))}
         </div>
 
-        {/* 🎛️ Controlli eventi visibili ovunque, ma cliccabili solo se admin */}
-{(() => {
-  const isAdmin =
-    window.location.search.includes("admin=true") ||
-    window.location.hostname === "localhost";
+        {/* 🎛️ Controlli eventi (visibili ovunque, cliccabili solo se admin) */}
+        {(() => {
+          const isAdmin =
+            window.location.search.includes("admin=true") ||
+            window.location.hostname === "localhost";
 
-  return (
-    <div className="event-controls" style={{ opacity: isAdmin ? 1 : 0.5 }}>
-      <button title="Vittoria Finale" onClick={isAdmin ? toggleVictory : null} disabled={!isAdmin}>
-        🏆
-      </button>
-      <button title="Duello" onClick={isAdmin ? () => toggleEvent("duello") : null} disabled={!isAdmin}>
-        ⚔️
-      </button>
-      <button title="Tradimento" onClick={isAdmin ? () => toggleEvent("tradimento") : null} disabled={!isAdmin}>
-        ☠️
-      </button>
-      <button title="Tesoro" onClick={isAdmin ? () => toggleEvent("tesoro") : null} disabled={!isAdmin}>
-        💰
-      </button>
-      <button title="Pioggia" onClick={isAdmin ? () => toggleEvent("pioggia") : null} disabled={!isAdmin}>
-        🌧️
-      </button>
-    </div>
-  );
-})()}
-
-
+          return (
+            <div className="event-controls" style={{ opacity: isAdmin ? 1 : 0.5 }}>
+              {isAdmin && (
+                <div style={{ color: "yellow", marginBottom: "4px", fontSize: "14px" }}>
+                  🔒 ADMIN MODE
+                </div>
+              )}
+              <button title="Vittoria Finale" onClick={isAdmin ? toggleVictory : null} disabled={!isAdmin}>🏆</button>
+              <button title="Duello" onClick={isAdmin ? () => toggleEvent("duello") : null} disabled={!isAdmin}>⚔️</button>
+              <button title="Tradimento" onClick={isAdmin ? () => toggleEvent("tradimento") : null} disabled={!isAdmin}>☠️</button>
+              <button title="Tesoro" onClick={isAdmin ? () => toggleEvent("tesoro") : null} disabled={!isAdmin}>💰</button>
+              <button title="Pioggia" onClick={isAdmin ? () => toggleEvent("pioggia") : null} disabled={!isAdmin}>🌧️</button>
+            </div>
+          );
+        })()}
       </div>
 
       {/* 🌊 Area gara */}
