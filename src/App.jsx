@@ -20,7 +20,7 @@ import vittoriaAudio from "./assets/events/vittoria.mp3";
 import leaderboardBg from "./assets/ui/leaderboard.png";
 import "./styles.css";
 
-// SAFE POINT - Versione stabile con admin control
+// SAFE POINT + Eventi da Google Sheet
 const MAX_POINTS = 60;
 const SHEET_ID = "1P05Uw_P7rfapZcO0KLz5wAa1Rjnp6h5XmK3yOGSnZLo";
 
@@ -106,10 +106,73 @@ export default function App() {
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
+  // 🔔 Polling EVENTI dalla tab "Eventi" (gid=1)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function pollEvents() {
+      try {
+        const evRows = await fetchSheet(SHEET_ID, 1);
+
+        const getYes = (rowIdx) =>
+          (evRows?.[rowIdx]?.B || "").toString().trim().toUpperCase() === "SI";
+
+        const flags = {
+          duello: getYes(0),
+          tradimento: getYes(1),
+          tesoro: getYes(2),
+          pioggia: getYes(3),
+          vittoria: getYes(5),
+        };
+
+        const nextEvent =
+          (flags.duello && "duello") ||
+          (flags.tradimento && "tradimento") ||
+          (flags.tesoro && "tesoro") ||
+          (flags.pioggia && "pioggia") ||
+          null;
+
+        if (!cancelled && nextEvent !== activeEvent) {
+          Object.values(eventSounds.current).forEach((s) => s.stop());
+          if (nextEvent) {
+            const s = eventSounds.current[nextEvent];
+            s.volume(0);
+            s.play();
+            s.fade(0, 1, 800);
+          }
+          setActiveEvent(nextEvent);
+        }
+
+        if (!cancelled && !nextEvent && activeEvent) {
+          const s = eventSounds.current[activeEvent];
+          s?.fade(1, 0, 800);
+          setTimeout(() => s?.stop(), 800);
+          setActiveEvent(null);
+        }
+
+        if (!cancelled && flags.vittoria && !showVictory) {
+          vittoriaSound.current.stop();
+          vittoriaSound.current.play();
+          setTimeout(() => setShowVictory(true), 3000);
+        }
+        if (!cancelled && !flags.vittoria && showVictory) {
+          vittoriaSound.current.fade(1, 0, 1000);
+          setTimeout(() => setShowVictory(false), 1000);
+        }
+      } catch (e) {
+        console.error("Polling eventi error:", e);
+      }
+    }
+
+    pollEvents();
+    const id = setInterval(pollEvents, 4000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [activeEvent, showVictory]);
+
   const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
 
-  // 🎵 Attiva evento
+  // 🎵 Controlli manuali (admin)
   const toggleEvent = (eventKey) => {
     const current = eventSounds.current[eventKey];
     if (activeEvent === eventKey) {
@@ -129,7 +192,6 @@ export default function App() {
     current.fade(0, 1, 1500);
   };
 
-  // 🏆 Vittoria finale
   const toggleVictory = () => {
     vittoriaSound.current.stop();
     vittoriaSound.current.play();
