@@ -281,27 +281,7 @@ export default function App() {
           ))}
         </div>
 
-        {/* 🎛️ Controlli eventi (visibili ovunque, cliccabili solo se admin) */}
-        {(() => {
-          const isAdmin =
-            window.location.search.includes("admin=true") ||
-            window.location.hostname === "localhost";
-
-          return (
-            <div className="event-controls" style={{ opacity: isAdmin ? 1 : 0.5 }}>
-              {isAdmin && (
-                <div style={{ color: "yellow", marginBottom: "4px", fontSize: "14px" }}>
-                  🔒 ADMIN MODE
-                </div>
-              )}
-              <button title="Vittoria Finale" onClick={isAdmin ? toggleVictory : null} disabled={!isAdmin}>🏆</button>
-              <button title="Duello" onClick={isAdmin ? () => toggleEvent("duello") : null} disabled={!isAdmin}>⚔️</button>
-              <button title="Tradimento" onClick={isAdmin ? () => toggleEvent("tradimento") : null} disabled={!isAdmin}>☠️</button>
-              <button title="Tesoro" onClick={isAdmin ? () => toggleEvent("tesoro") : null} disabled={!isAdmin}>💰</button>
-              <button title="Pioggia" onClick={isAdmin ? () => toggleEvent("pioggia") : null} disabled={!isAdmin}>🌧️</button>
-            </div>
-          );
-        })()}
+        
       </div>
 
       {/* 🌊 Area gara */}
