@@ -112,7 +112,7 @@ export default function App() {
 
     async function pollEvents() {
       try {
-        const evRows = await fetchSheet(SHEET_ID, 1);
+        const evRows = await fetchSheet(SHEET_ID, 433893229);
 
         const getYes = (rowIdx) =>
           (evRows?.[rowIdx]?.B || "").toString().trim().toUpperCase() === "SI";
