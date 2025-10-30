@@ -120,13 +120,13 @@ export default function App() {
           (evRows?.[rowIdx]?.B || "").toString().trim().toUpperCase() === "SI";
 
         const flags = {
-          attacco: getYes(0),
-          duello: getYes(1),
-          tradimento: getYes(2),
-          tesoro: getYes(3),
-          pioggia: getYes(4),
-          frutto: getYes(5),
-          vittoria: getYes(6),
+          attacco: getYes(1),
+          duello: getYes(2),
+          tradimento: getYes(3),
+          tesoro: getYes(4),
+          pioggia: getYes(5),
+          frutto: getYes(6),
+          vittoria: getYes(7),
         };
 
         const allEvents = ["attacco", "duello", "tradimento", "tesoro", "pioggia", "frutto"];
