@@ -111,74 +111,73 @@ export default function App() {
   }, []);
 
   // 🔔 Polling EVENTI da Google Sheet (gid=433893229)
-useEffect(() => {
-  let cancelled = false;
-  async function pollEvents() {
-    try {
-      const evRows = await fetchSheet(SHEET_ID, 433893229);
-      const getYes = (rowIdx) =>
-        (evRows?.[rowIdx]?.B || "").toString().trim().toUpperCase() === "SI";
+  useEffect(() => {
+    let cancelled = false;
+    async function pollEvents() {
+      try {
+        const evRows = await fetchSheet(SHEET_ID, 433893229);
+        const getYes = (rowIdx) =>
+          (evRows?.[rowIdx]?.B || "").toString().trim().toUpperCase() === "SI";
 
-      // ✅ Nuovo ordine corretto:
-      // A1 Attacco | A2 Duello | A3 Tradimento | A4 Tesoro | A5 Pioggia | A6 Frutto | A7 Vittoria
-      const flags = {
-        attacco: getYes(0),
-        duello: getYes(1),
-        tradimento: getYes(2),
-        tesoro: getYes(3),
-        pioggia: getYes(4),
-        frutto: getYes(5),
-        vittoria: getYes(6),
-      };
+        // ✅ Nuovo ordine corretto:
+        // A1 Attacco | A2 Duello | A3 Tradimento | A4 Tesoro | A5 Pioggia | A6 Frutto | A7 Vittoria
+        const flags = {
+          attacco: getYes(0),
+          duello: getYes(1),
+          tradimento: getYes(2),
+          tesoro: getYes(3),
+          pioggia: getYes(4),
+          frutto: getYes(5),
+          vittoria: getYes(6),
+        };
 
-      const allEvents = ["attacco", "duello", "tradimento", "tesoro", "pioggia", "frutto"];
-      const activeKey = allEvents.find(k => flags[k]) || null;
+        const allEvents = ["attacco", "duello", "tradimento", "tesoro", "pioggia", "frutto"];
+        const activeKey = allEvents.find(k => flags[k]) || null;
 
-      // ▶️ Attiva evento
-      if (!cancelled && activeKey && activeKey !== activeEvent) {
-        Object.values(eventSounds.current).forEach(s => s.stop());
-        const sound = eventSounds.current[activeKey];
-        if (sound) {
-          sound.stop();
-          sound.volume(0);
-          sound.play();
-          sound.fade(0, 1, 1500);
+        // ▶️ Attiva evento
+        if (!cancelled && activeKey && activeKey !== activeEvent) {
+          Object.values(eventSounds.current).forEach(s => s.stop());
+          const sound = eventSounds.current[activeKey];
+          if (sound) {
+            sound.stop();
+            sound.volume(0);
+            sound.play();
+            sound.fade(0, 1, 1500);
+          }
+          setActiveEvent(activeKey);
         }
-        setActiveEvent(activeKey);
-      }
 
-      // ⏹️ Disattiva evento
-      if (!cancelled && !activeKey && activeEvent) {
-        const sound = eventSounds.current[activeEvent];
-        if (sound) {
-          sound.fade(1, 0, 1500);
-          setTimeout(() => sound.stop(), 1500);
+        // ⏹️ Disattiva evento
+        if (!cancelled && !activeKey && activeEvent) {
+          const sound = eventSounds.current[activeEvent];
+          if (sound) {
+            sound.fade(1, 0, 1500);
+            setTimeout(() => sound.stop(), 1500);
+          }
+          setTimeout(() => setActiveEvent(null), 1000);
         }
-        setTimeout(() => setActiveEvent(null), 1000);
-      }
 
-      // 🏆 Vittoria
-      if (!cancelled && flags.vittoria && !showVictory) {
-        vittoriaSound.current.stop();
-        vittoriaSound.current.volume(0);
-        vittoriaSound.current.play();
-        vittoriaSound.current.fade(0, 1, 1500);
-        setShowVictory(true);
+        // 🏆 Vittoria
+        if (!cancelled && flags.vittoria && !showVictory) {
+          vittoriaSound.current.stop();
+          vittoriaSound.current.volume(0);
+          vittoriaSound.current.play();
+          vittoriaSound.current.fade(0, 1, 1500);
+          setShowVictory(true);
+        }
+        if (!cancelled && !flags.vittoria && showVictory) {
+          vittoriaSound.current.fade(1, 0, 1500);
+          setTimeout(() => vittoriaSound.current.stop(), 1500);
+          setTimeout(() => setShowVictory(false), 1000);
+        }
+      } catch (e) {
+        console.error("Polling eventi error:", e);
       }
-      if (!cancelled && !flags.vittoria && showVictory) {
-        vittoriaSound.current.fade(1, 0, 1500);
-        setTimeout(() => vittoriaSound.current.stop(), 1500);
-        setTimeout(() => setShowVictory(false), 1000);
-      }
-    } catch (e) {
-      console.error("Polling eventi error:", e);
     }
-  }
-  pollEvents();
-  const id = setInterval(pollEvents, 4000);
-  return () => { cancelled = true; clearInterval(id); };
-}, [activeEvent, showVictory]);
-
+    pollEvents();
+    const id = setInterval(pollEvents, 4000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [activeEvent, showVictory]);
 
   const normalize = points => Math.min(points / MAX_POINTS, 1);
   const leader = [...players].sort((a, b) => b.points - a.points)[0]?.name;
