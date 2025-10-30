@@ -5,15 +5,17 @@ import { Howl } from "howler";
 import { SOUND_URLS } from "./sounds";
 import { ASSETS } from "./assets";
 
-import tradimentoImg from "./assets/events/tradimento.png";
+import attaccoImg from "./assets/events/attacco.png";
 import duelloImg from "./assets/events/duello.png";
+import tradimentoImg from "./assets/events/tradimento.png";
 import pioggiaImg from "./assets/events/pioggia.png";
 import tesoroImg from "./assets/events/tesoro.png";
 import fruttoImg from "./assets/events/frutto.png";
 import vittoriaImg from "./assets/events/vittoria.png";
 
-import tradimentoAudio from "./assets/events/tradimento.mp3";
 import attaccoAudio from "./assets/events/attacco.mp3";
+import duelloAudio from "./assets/events/duello.mp3";
+import tradimentoAudio from "./assets/events/tradimento.mp3";
 import pioggiaAudio from "./assets/events/pioggia.mp3";
 import tesoroAudio from "./assets/events/tesoro.mp3";
 import fruttoAudio from "./assets/events/frutto.mp3";
@@ -51,18 +53,20 @@ export default function App() {
   const vittoriaSound = useRef(new Howl({ src: [vittoriaAudio], volume: 1 }));
 
   const eventSounds = useRef({
+    attacco: new Howl({ src: [attaccoAudio], volume: 1, loop: true }),
+    duello: new Howl({ src: [duelloAudio], volume: 1, loop: true }),
     tradimento: new Howl({ src: [tradimentoAudio], volume: 1, loop: true }),
-    duello: new Howl({ src: [attaccoAudio], volume: 1, loop: true }),
-    pioggia: new Howl({ src: [pioggiaAudio], volume: 1, loop: true }),
     tesoro: new Howl({ src: [tesoroAudio], volume: 1, loop: true }),
+    pioggia: new Howl({ src: [pioggiaAudio], volume: 1, loop: true }),
     frutto: new Howl({ src: [fruttoAudio], volume: 1, loop: true }),
   });
 
   const eventImages = {
-    tradimento: tradimentoImg,
+    attacco: attaccoImg,
     duello: duelloImg,
-    pioggia: pioggiaImg,
+    tradimento: tradimentoImg,
     tesoro: tesoroImg,
+    pioggia: pioggiaImg,
     frutto: fruttoImg,
   };
 
@@ -116,15 +120,16 @@ export default function App() {
           (evRows?.[rowIdx]?.B || "").toString().trim().toUpperCase() === "SI";
 
         const flags = {
-          duello: getYes(0),
-          tradimento: getYes(1),
-          tesoro: getYes(2),
-          pioggia: getYes(3),
-          frutto: getYes(4),
-          vittoria: getYes(5),
+          attacco: getYes(0),
+          duello: getYes(1),
+          tradimento: getYes(2),
+          tesoro: getYes(3),
+          pioggia: getYes(4),
+          frutto: getYes(5),
+          vittoria: getYes(6),
         };
 
-        const allEvents = ["duello", "tradimento", "tesoro", "pioggia", "frutto"];
+        const allEvents = ["attacco", "duello", "tradimento", "tesoro", "pioggia", "frutto"];
         const activeKey = allEvents.find(k => flags[k]) || null;
 
         // ▶️ Attiva evento
