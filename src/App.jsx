@@ -53,12 +53,12 @@ export default function App() {
   const vittoriaSound = useRef(new Howl({ src: [vittoriaAudio], volume: 1 }));
 
   const eventSounds = useRef({
-    attacco: new Howl({ src: [attaccoAudio], volume: 1, loop: true }),
-    duello: new Howl({ src: [duelloAudio], volume: 1, loop: true }),
-    tradimento: new Howl({ src: [tradimentoAudio], volume: 1, loop: true }),
-    tesoro: new Howl({ src: [tesoroAudio], volume: 1, loop: true }),
-    pioggia: new Howl({ src: [pioggiaAudio], volume: 1, loop: true }),
-    frutto: new Howl({ src: [fruttoAudio], volume: 1, loop: true }),
+    attacco: new Howl({ src: [attaccoAudio], volume: 1 }),
+    duello: new Howl({ src: [duelloAudio], volume: 1 }),
+    tradimento: new Howl({ src: [tradimentoAudio], volume: 1 }),
+    tesoro: new Howl({ src: [tesoroAudio], volume: 1 }),
+    pioggia: new Howl({ src: [pioggiaAudio], volume: 1 }),
+    frutto: new Howl({ src: [fruttoAudio], volume: 1 }),
   });
 
   const eventImages = {
